@@ -8,8 +8,12 @@ A Vue 3 application using the Composition API, integrated with Notion API for da
 wanthykom/
 ├── public/                  # Static files
 ├── src/
-│   ├── assets/             # Static assets (images, fonts, etc.)
+│   ├── assets/              # Static assets (images, fonts, etc.)
 │   ├── components/          # Reusable Vue components
+│   │   ├── AppFooter.vue    # Footer component
+│   │   ├── MainContent.vue  # Main content wrapper
+│   │   ├── PageHeadings.vue # Page headings (top bar)
+│   │   └── VerticalNav.vue  # Vertical navigation sidebar
 │   ├── composables/         # Vue 3 composables
 │   ├── router/              # Vue Router configuration
 │   ├── stores/              # Pinia stores
@@ -25,6 +29,40 @@ wanthykom/
 ├── postcss.config.js
 ├── README.md
 └── vite.config.js
+```
+
+## Layout Overview
+
+The app uses a modern, responsive layout powered by Tailwind CSS:
+
+- **PageHeadings.vue:** Top bar with the main page heading and subheading.
+- **VerticalNav.vue:** Vertical navigation sidebar on the left (visible on desktop).
+- **MainContent.vue:** Main content area, optimized for reading with a medium-dark background and readable text.
+- **AppFooter.vue:** Footer at the bottom of the page.
+
+All layout components are found in `src/components/` and are used in `App.vue` to compose the main layout.
+
+### Customizing the Layout
+- To add or change navigation links, edit `VerticalNav.vue`.
+- To change the main heading or subheading, edit `PageHeadings.vue`.
+- To adjust the reading experience (colors, spacing), modify the Tailwind classes in `MainContent.vue`.
+- The footer content can be updated in `AppFooter.vue`.
+
+### Example Layout Usage in App.vue
+
+```vue
+<template>
+  <div class="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700">
+    <PageHeadings />
+    <div class="flex flex-1 w-full max-w-7xl mx-auto gap-0 md:gap-8 px-2 md:px-8 py-8">
+      <VerticalNav class="hidden md:flex" />
+      <MainContent>
+        <RouterView />
+      </MainContent>
+    </div>
+    <AppFooter />
+  </div>
+</template>
 ```
 
 ## Features
