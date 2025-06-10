@@ -2,6 +2,31 @@
 
 A Vue 3 application using the Composition API, integrated with Notion API for data management.
 
+## Project Structure
+
+```
+wanthykom/
+├── public/                  # Static files
+├── src/
+│   ├── assets/             # Static assets (images, fonts, etc.)
+│   ├── components/          # Reusable Vue components
+│   ├── composables/         # Vue 3 composables
+│   ├── router/              # Vue Router configuration
+│   ├── stores/              # Pinia stores
+│   │   ├── notion.js        # Notion API store
+│   │   └── counter.js       # Example counter store
+│   ├── views/               # Page components
+│   ├── App.vue              # Root Vue component
+│   └── main.js              # Application entry point
+├── .env                     # Environment variables
+├── .gitignore
+├── index.html
+├── package.json
+├── postcss.config.js
+├── README.md
+└── vite.config.js
+```
+
 ## Features
 
 - Vue 3 with Composition API
@@ -9,12 +34,28 @@ A Vue 3 application using the Composition API, integrated with Notion API for da
 - Vue Router for navigation
 - Integration with Notion API
 - ESLint + Prettier for code quality
+- Tailwind CSS for styling
+- Environment-based configuration
 
 ## Prerequisites
 
 - Node.js 16+ and npm 8+
 - Notion API key (get it from [Notion Developers](https://developers.notion.com/))
-- A Notion database with the required permissions
+- A Notion page with the required permissions (share the page with your integration)
+
+## Notion Integration Setup
+
+1. Create a new integration in [Notion Integrations](https://www.notion.so/my-integrations)
+2. Note the "Internal Integration Token" (this is your API key)
+3. Share your Notion page with the integration:
+   - Open the page in Notion
+   - Click "Share" in the top-right corner
+   - Click "Invite" and select your integration
+4. Copy the page ID from the URL (the part after the last hyphen)
+5. Add the following to your `.env` file:
+   ```
+   VITE_NOTION_API_KEY=your_integration_token
+   ```
 
 ## Project Setup
 
@@ -24,11 +65,47 @@ A Vue 3 application using the Composition API, integrated with Notion API for da
 npm install
 ```
 
-2. Create a `.env` file in the root directory and add your Notion API key and database ID:
+2. Create a `.env` file in the root directory and add your Notion API key:
 
-```
+```env
+# Authentication
+VITE_AUTH_TOKEN_KEY=auth_token
+VITE_REFRESH_TOKEN_KEY=refresh_token
+
+# Notion API
 VITE_NOTION_API_KEY=your_notion_api_key
-VITE_NOTION_DATABASE_ID=your_database_id
+
+# Feature Flags
+VITE_ENABLE_ANALYTICS=false
+VITE_ENABLE_DEBUG_LOGS=false
+
+# Development
+VITE_DEV_SERVER_PORT=5173
+```
+
+## Using the Notion Store
+
+The application includes a Pinia store for interacting with the Notion API. Here's how to use it in your components:
+
+```javascript
+import { useNotionStore } from '@/stores/notion';
+
+// In your component setup
+const notionStore = useNotionStore();
+
+// Fetch page blocks
+const loadPage = async () => {
+  try {
+    const blocks = await notionStore.fetchPageBlocks('your_page_id');
+    console.log('Fetched blocks:', blocks);
+  } catch (error) {
+    console.error('Failed to load page:', error);
+  }
+};
+
+// Access page data and blocks
+const page = computed(() => notionStore.page);
+const isLoading = computed(() => notionStore.isLoading);
 ```
 
 ### Development Server
