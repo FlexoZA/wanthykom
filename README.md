@@ -10,16 +10,24 @@ wanthykom/
 ├── src/
 │   ├── assets/              # Static assets (images, fonts, etc.)
 │   ├── components/          # Reusable Vue components
-│   │   ├── AppFooter.vue    # Footer component
-│   │   ├── MainContent.vue  # Main content wrapper
-│   │   ├── PageHeadings.vue # Page headings (top bar)
-│   │   └── VerticalNav.vue  # Vertical navigation sidebar
+│   │   ├── header/          # Header related components
+│   │   ├── navigation/      # Navigation components
+│   │   ├── footer/          # Footer components
+│   │   ├── icons/           # Icon components
+│   │   ├── helpers/         # Helper components
+│   │   │   ├── FormattedText.vue    # Text formatting component
+│   │   │   └── FormattedHeading.vue # Heading formatting component
+│   │   ├── notion/          # Notion-specific components
+│   │   │   └── NotionLandingContent.vue # Landing page content
+│   │   └── MainContent.vue  # Main content wrapper
 │   ├── composables/         # Vue 3 composables
 │   ├── router/              # Vue Router configuration
 │   ├── stores/              # Pinia stores
-│   │   ├── notion.js        # Notion API store
+│   │   ├── notion.js        # Notion API store for page blocks
+│   │   ├── notionPrefaceStore.js # Notion store for landing page
 │   │   └── counter.js       # Example counter store
 │   ├── views/               # Page components
+│   │   └── HomeView.vue     # Landing page view
 │   ├── App.vue              # Root Vue component
 │   └── main.js              # Application entry point
 ├── .env                     # Environment variables
@@ -35,18 +43,30 @@ wanthykom/
 
 The app uses a modern, responsive layout powered by Tailwind CSS:
 
-- **PageHeadings.vue:** Top bar with the main page heading and subheading.
-- **VerticalNav.vue:** Vertical navigation sidebar on the left (visible on desktop).
+- **Header Components:** Top bar with the main page heading and subheading.
+- **Navigation Components:** Vertical navigation sidebar on the left (visible on desktop).
 - **MainContent.vue:** Main content area, optimized for reading with a medium-dark background and readable text.
-- **AppFooter.vue:** Footer at the bottom of the page.
+- **Footer Components:** Footer at the bottom of the page.
 
-All layout components are found in `src/components/` and are used in `App.vue` to compose the main layout.
+### Component Structure
 
-### Customizing the Layout
-- To add or change navigation links, edit `VerticalNav.vue`.
-- To change the main heading or subheading, edit `PageHeadings.vue`.
-- To adjust the reading experience (colors, spacing), modify the Tailwind classes in `MainContent.vue`.
-- The footer content can be updated in `AppFooter.vue`.
+#### Notion Integration Components
+- **NotionLandingContent.vue:** Displays Notion content with infinite scroll
+  - Handles loading states
+  - Supports images with captions
+  - Supports formatted text (bold, italic, etc.)
+  - Supports headings (h1, h2, h3)
+  - Implements infinite scroll for long content
+
+#### Helper Components
+- **FormattedText.vue:** Handles text formatting from Notion
+  - Supports bold, italic, strikethrough, underline
+  - Supports code blocks
+  - Supports text colors
+- **FormattedHeading.vue:** Handles heading formatting
+  - Supports h1, h2, h3
+  - Maintains consistent styling
+  - Integrates with FormattedText
 
 ### Example Layout Usage in App.vue
 
@@ -74,6 +94,9 @@ All layout components are found in `src/components/` and are used in `App.vue` t
 - ESLint + Prettier for code quality
 - Tailwind CSS for styling
 - Environment-based configuration
+- Infinite scroll for Notion content
+- Responsive design
+- Dark mode optimized
 
 ## Prerequisites
 
@@ -121,10 +144,11 @@ VITE_ENABLE_DEBUG_LOGS=false
 VITE_DEV_SERVER_PORT=5173
 ```
 
-## Using the Notion Store
+## Using the Notion Stores
 
-The application includes a Pinia store for interacting with the Notion API. Here's how to use it in your components:
+The application includes two Pinia stores for interacting with the Notion API:
 
+### Main Notion Store
 ```javascript
 import { useNotionStore } from '@/stores/notion';
 
@@ -144,6 +168,28 @@ const loadPage = async () => {
 // Access page data and blocks
 const page = computed(() => notionStore.page);
 const isLoading = computed(() => notionStore.isLoading);
+```
+
+### Preface Store (Landing Page)
+```javascript
+import { useNotionPrefaceStore } from '@/stores/notionPrefaceStore';
+
+// In your component setup
+const prefaceStore = useNotionPrefaceStore();
+
+// Fetch the preface page
+const loadPreface = async () => {
+  try {
+    const page = await prefaceStore.fetchPrefacePage('your_page_id');
+    console.log('Fetched preface page:', page);
+  } catch (error) {
+    console.error('Failed to load preface page:', error);
+  }
+};
+
+// Access page data
+const title = computed(() => prefaceStore.getPageTitle);
+const description = computed(() => prefaceStore.getPageDescription);
 ```
 
 ### Development Server
