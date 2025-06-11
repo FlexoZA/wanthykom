@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia';
 import { Client } from '@notionhq/client';
 
-console.log('API Key:', import.meta.env.VITE_NOTION_API_KEY);
-
 const notion = new Client({
   auth: import.meta.env.VITE_NOTION_API_KEY,
   notionVersion: '2022-06-28'
