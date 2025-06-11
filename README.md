@@ -51,6 +51,7 @@ The app uses a modern, responsive layout powered by Tailwind CSS:
 ### Component Structure
 
 #### Notion Integration Components
+
 - **NotionLandingContent.vue:** Displays Notion content with infinite scroll
   - Handles loading states
   - Supports images with captions
@@ -59,6 +60,7 @@ The app uses a modern, responsive layout powered by Tailwind CSS:
   - Implements infinite scroll for long content
 
 #### Helper Components
+
 - **FormattedText.vue:** Handles text formatting from Notion
   - Supports bold, italic, strikethrough, underline
   - Supports code blocks
@@ -67,6 +69,31 @@ The app uses a modern, responsive layout powered by Tailwind CSS:
   - Supports h1, h2, h3
   - Maintains consistent styling
   - Integrates with FormattedText
+- **NotificationToast.vue:** Reusable notification component
+  - Supports multiple notification types (info, success, error, cache)
+  - Auto-dismiss with fade animation
+  - Uses v-model for two-way binding
+  - Built with Composition API
+
+### Example Usage of NotificationToast
+
+```vue
+<script setup>
+import { ref } from 'vue'
+import NotificationToast from '@/components/helpers/NotificationToast.vue'
+
+const notificationMessage = ref('')
+
+// Show a notification
+const showNotification = () => {
+  notificationMessage.value = 'Operation completed successfully'
+}
+</script>
+
+<template>
+  <NotificationToast v-model:message="notificationMessage" type="success" :duration="3000" />
+</template>
+```
 
 ### Example Layout Usage in App.vue
 
@@ -149,47 +176,49 @@ VITE_DEV_SERVER_PORT=5173
 The application includes two Pinia stores for interacting with the Notion API:
 
 ### Main Notion Store
+
 ```javascript
-import { useNotionStore } from '@/stores/notion';
+import { useNotionStore } from '@/stores/notion'
 
 // In your component setup
-const notionStore = useNotionStore();
+const notionStore = useNotionStore()
 
 // Fetch page blocks
 const loadPage = async () => {
   try {
-    const blocks = await notionStore.fetchPageBlocks('your_page_id');
-    console.log('Fetched blocks:', blocks);
+    const blocks = await notionStore.fetchPageBlocks('your_page_id')
+    console.log('Fetched blocks:', blocks)
   } catch (error) {
-    console.error('Failed to load page:', error);
+    console.error('Failed to load page:', error)
   }
-};
+}
 
 // Access page data and blocks
-const page = computed(() => notionStore.page);
-const isLoading = computed(() => notionStore.isLoading);
+const page = computed(() => notionStore.page)
+const isLoading = computed(() => notionStore.isLoading)
 ```
 
 ### Preface Store (Landing Page)
+
 ```javascript
-import { useNotionPrefaceStore } from '@/stores/notionPrefaceStore';
+import { useNotionPrefaceStore } from '@/stores/notionPrefaceStore'
 
 // In your component setup
-const prefaceStore = useNotionPrefaceStore();
+const prefaceStore = useNotionPrefaceStore()
 
 // Fetch the preface page
 const loadPreface = async () => {
   try {
-    const page = await prefaceStore.fetchPrefacePage('your_page_id');
-    console.log('Fetched preface page:', page);
+    const page = await prefaceStore.fetchPrefacePage('your_page_id')
+    console.log('Fetched preface page:', page)
   } catch (error) {
-    console.error('Failed to load preface page:', error);
+    console.error('Failed to load preface page:', error)
   }
-};
+}
 
 // Access page data
-const title = computed(() => prefaceStore.getPageTitle);
-const description = computed(() => prefaceStore.getPageDescription);
+const title = computed(() => prefaceStore.getPageTitle)
+const description = computed(() => prefaceStore.getPageDescription)
 ```
 
 ### Development Server
