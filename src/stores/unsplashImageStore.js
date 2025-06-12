@@ -52,22 +52,14 @@ export const useUnsplashImageStore = defineStore('unsplashImage', () => {
         photographerUrl: data.user.links.html,
       }
       console.log('Processed image data:', currentImage.value)
-      lastFetchTime.value = new Date().toISOString()
 
-      // Store in localStorage for persistence
-      localStorage.setItem(
-        'unsplashImage',
-        JSON.stringify({
-          image: currentImage.value,
-          timestamp: lastFetchTime.value,
-        }),
-      )
-
-      return currentImage.value
+      saveToLocalStorage({
+        image: currentImage.value,
+        timestamp: Date.now(),
+      })
     } catch (err) {
       error.value = err.message
       console.error('Error fetching Unsplash image:', err)
-      return null
     } finally {
       isLoading.value = false
     }
@@ -80,6 +72,10 @@ export const useUnsplashImageStore = defineStore('unsplashImage', () => {
       currentImage.value = image
       lastFetchTime.value = timestamp
     }
+  }
+
+  const saveToLocalStorage = (data) => {
+    localStorage.setItem('unsplashImage', JSON.stringify(data))
   }
 
   // Initialize store

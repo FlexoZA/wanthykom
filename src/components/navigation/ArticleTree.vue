@@ -1,9 +1,7 @@
 <template>
   <div>
     <!-- Loading state -->
-    <div v-if="isLoading" class="text-gray-400 py-2 px-3">
-      Loading articles...
-    </div>
+    <div v-if="isLoading" class="text-gray-400 py-2 px-3">Loading articles...</div>
 
     <!-- Error state -->
     <div v-else-if="error" class="text-red-400 py-2 px-3">
@@ -26,17 +24,14 @@
             :class="{ 'bg-gray-700': isExpanded(item.id) }"
           >
             <span class="font-medium text-gray-200">{{ item.title }}</span>
-            <span 
+            <span
               class="transform transition-transform duration-200 text-gray-400"
               :class="{ 'rotate-90': isExpanded(item.id) }"
             >
               ›
             </span>
           </button>
-          <div 
-            v-show="isExpanded(item.id)"
-            class="ml-4 mt-1 space-y-1 transition-all duration-200"
-          >
+          <div v-show="isExpanded(item.id)" class="ml-4 mt-1 space-y-1 transition-all duration-200">
             <RouterLink
               v-for="child in item.children"
               :key="child.id"
@@ -70,16 +65,16 @@ import { RouterLink } from 'vue-router'
 const props = defineProps({
   items: {
     type: Array,
-    required: true
+    required: true,
   },
   isLoading: {
     type: Boolean,
-    default: false
+    default: false,
   },
   error: {
     type: String,
-    default: null
-  }
+    default: null,
+  },
 })
 
 const expandedItems = ref(new Set())
@@ -110,4 +105,4 @@ const debugInfo = computed(() => {
   font-size: 1.2em;
   line-height: 1;
 }
-</style> 
+</style>

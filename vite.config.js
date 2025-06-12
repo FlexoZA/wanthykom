@@ -17,14 +17,12 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api/notion': {
-        target: 'https://api.notion.com/v1',
+      '/api/n8n': {
+        target: 'https://automation.cwe.cloud',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/notion/, ''),
-        headers: {
-          'Notion-Version': '2022-06-28'
-        }
-      }
-    }
-  }
+        rewrite: (path) => path.replace(/^\/api\/n8n/, ''),
+        secure: false,
+      },
+    },
+  },
 })
