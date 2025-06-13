@@ -10,6 +10,13 @@
     >
       Want hy kom
     </RouterLink>
+    <RouterLink
+      to="/books"
+      class="py-2 px-3 rounded hover:bg-gray-700 transition-colors mb-4 font-semibold"
+      active-class="bg-gray-700"
+    >
+      Deel 1
+    </RouterLink>
   </nav>
 </template>
 
