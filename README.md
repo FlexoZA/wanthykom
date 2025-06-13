@@ -1,6 +1,6 @@
 # Want hy kom
 
-A Vue 3 application using the Composition API, integrated with Notion API for data management.
+A Vue 3 application using the Composition API, integrated with Supabase for data management.
 
 ## Project Structure
 
@@ -18,14 +18,11 @@ wanthykom/
 │   │   │   ├── FormattedText.vue    # Text formatting component
 │   │   │   ├── FormattedHeading.vue # Heading formatting component
 │   │   │   └── NotificationToast.vue # Reusable notification component
-│   │   ├── notion/          # Notion-specific components
-│   │   │   └── NotionLandingContent.vue # Landing page content
 │   │   └── MainContent.vue  # Main content wrapper
 │   ├── composables/         # Vue 3 composables
 │   ├── router/              # Vue Router configuration
 │   ├── stores/              # Pinia stores
-│   │   ├── notion.js        # Notion API store for page blocks
-│   │   ├── notionPrefaceStore.js # Notion store for landing page
+│   │   ├── supabaseArticleStore.js # Supabase store for articles
 │   │   └── counter.js       # Example counter store
 │   ├── views/               # Page components
 │   │   └── HomeView.vue     # Landing page view
@@ -47,11 +44,10 @@ wanthykom/
 - Vue 3 with Composition API
 - Pinia for state management
 - Vue Router for navigation
-- Integration with Notion API
+- Integration with Supabase
 - ESLint + Prettier for code quality
 - Tailwind CSS for styling
 - Environment-based configuration
-- Infinite scroll for Notion content
 - Responsive design
 - Dark mode optimized
 
@@ -64,7 +60,7 @@ wanthykom/
 
 ### Helper Components
 
-- **FormattedText.vue:** Handles text formatting from Notion
+- **FormattedText.vue:** Handles text formatting
   - Supports bold, italic, strikethrough, underline
   - Supports code blocks
   - Supports text colors
@@ -98,74 +94,44 @@ const showNotification = () => {
 </template>
 ```
 
-### Using the Notion Stores
+### Using the Supabase Article Store
 
-The application includes two Pinia stores for interacting with the Notion API:
-
-#### Main Notion Store
+The application includes a Pinia store for interacting with Supabase:
 
 ```javascript
-import { useNotionStore } from '@/stores/notion'
+import { useSupabaseArticleStore } from '@/stores/supabaseArticleStore'
 
 // In your component setup
-const notionStore = useNotionStore()
+const articleStore = useSupabaseArticleStore()
 
-// Fetch page blocks
-const loadPage = async () => {
+// Fetch articles
+const loadArticles = async () => {
   try {
-    const blocks = await notionStore.fetchPageBlocks('your_page_id')
-    console.log('Fetched blocks:', blocks)
+    await articleStore.fetchArticles()
+    console.log('Fetched articles:', articleStore.getArticles)
   } catch (error) {
-    console.error('Failed to load page:', error)
+    console.error('Failed to load articles:', error)
   }
 }
 
-// Access page data and blocks
-const page = computed(() => notionStore.page)
-const isLoading = computed(() => notionStore.isLoading)
-```
-
-#### Preface Store (Landing Page)
-
-```javascript
-import { useNotionPrefaceStore } from '@/stores/notionPrefaceStore'
-
-// In your component setup
-const prefaceStore = useNotionPrefaceStore()
-
-// Fetch the preface page
-const loadPreface = async () => {
-  try {
-    const page = await prefaceStore.fetchPrefacePage('your_page_id')
-    console.log('Fetched preface page:', page)
-  } catch (error) {
-    console.error('Failed to load preface page:', error)
-  }
-}
-
-// Access page data
-const title = computed(() => prefaceStore.getPageTitle)
-const description = computed(() => prefaceStore.getPageDescription)
+// Access article data
+const articles = computed(() => articleStore.getArticles)
+const isLoading = computed(() => articleStore.getIsLoading)
 ```
 
 ## Prerequisites
 
 - Node.js 16+ and npm 8+
-- Notion API key (get it from [Notion Developers](https://developers.notion.com/))
-- A Notion page with the required permissions (share the page with your integration)
+- Supabase account and project
 
-## Notion Integration Setup
+## Supabase Setup
 
-1. Create a new integration in [Notion Integrations](https://www.notion.so/my-integrations)
-2. Note the "Internal Integration Token" (this is your API key)
-3. Share your Notion page with the integration:
-   - Open the page in Notion
-   - Click "Share" in the top-right corner
-   - Click "Invite" and select your integration
-4. Copy the page ID from the URL (the part after the last hyphen)
-5. Add the following to your `.env` file:
+1. Create a new project in [Supabase](https://supabase.com)
+2. Get your project URL and anon key from the project settings
+3. Add the following to your `.env` file:
    ```
-   VITE_NOTION_API_KEY=your_integration_token
+   VITE_SUPABASE_URL=your_project_url
+   VITE_SUPABASE_ANON_KEY=your_anon_key
    ```
 
 ## Project Setup
@@ -176,15 +142,16 @@ const description = computed(() => prefaceStore.getPageDescription)
 npm install
 ```
 
-2. Create a `.env` file in the root directory and add your Notion API key:
+2. Create a `.env` file in the root directory and add your Supabase credentials:
 
 ```env
 # Authentication
 VITE_AUTH_TOKEN_KEY=auth_token
 VITE_REFRESH_TOKEN_KEY=refresh_token
 
-# Notion API
-VITE_NOTION_API_KEY=your_notion_api_key
+# Supabase
+VITE_SUPABASE_URL=your_project_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
 
 # Feature Flags
 VITE_ENABLE_ANALYTICS=false
