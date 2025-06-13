@@ -10,29 +10,9 @@
     >
       Want hy kom
     </RouterLink>
-
-    <!-- Article Tree -->
-    <ArticleTree 
-      :items="articleTree" 
-      :is-loading="isLoading"
-      :error="error"
-    />
   </nav>
 </template>
 
 <script setup>
 import { RouterLink } from 'vue-router'
-import { onMounted, computed } from 'vue'
-import { useNotionArticlesStore } from '@/stores/notionArticles'
-import ArticleTree from './ArticleTree.vue'
-
-const notionArticlesStore = useNotionArticlesStore()
-const { isLoading, error, getArticleTree, initialize } = notionArticlesStore
-
-const articleTree = computed(() => getArticleTree)
-
-onMounted(async () => {
-  console.log('VerticalNav mounted, initializing articles...')
-  await initialize()
-})
 </script>
