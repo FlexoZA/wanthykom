@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue(), vueDevTools(), tailwindcss()],
   css: {
@@ -15,16 +15,4 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  server: {
-    proxy: {
-      '/api/notion': {
-        target: 'https://api.notion.com/v1',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/notion/, ''),
-        headers: {
-          'Notion-Version': '2022-06-28'
-        }
-      }
-    }
-  }
 })
