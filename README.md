@@ -63,13 +63,18 @@ wanthykom/
     - Hierarchical display of book name, images, and chapters
     - Responsive image handling
     - Chapter text formatting
+    - Smooth scrolling to selected chapters
+    - Dynamic chapter navigation
 
 - **Header Components:** Top bar with the main page heading and subheading
 - **Navigation Components:** 
   - **VerticalNav.vue:** Vertical navigation sidebar on the left (visible on desktop)
     - Responsive design (hidden on mobile)
+    - Expandable book sections with chapter dropdowns
     - Active route highlighting
     - Sticky positioning
+    - Automatic expansion of selected book
+    - Collapsible chapter lists
 - **MainContent.vue:** Main content area, optimized for reading with a medium-dark background
 - **Footer Components:** Footer at the bottom of the page
 
@@ -112,6 +117,7 @@ const loadBooks = async () => {
 
 // Access book data
 const books = computed(() => bookStore.getBooks)
+const selectedBook = computed(() => bookStore.getSelectedBook)
 const isLoading = computed(() => bookStore.getIsLoading)
 ```
 
