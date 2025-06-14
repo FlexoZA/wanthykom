@@ -2,22 +2,28 @@
     <div class="space-y-8">
       <div v-if="isLoading" class="text-gray-400">Loading Books...</div>
       <div v-else-if="error" class="text-red-400">Error: {{ error }}</div>
+      <div v-else-if="!selectedBook" class="text-gray-400">Select a book from the navigation</div>
       <div v-else>
-        <div v-for="book in books" :key="book.id" class="mb-12">
-          <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ book.book_name }}</h2>
+        <div class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ selectedBook.book_name }}</h2>
           
           <!-- Book Image -->
-          <div v-if="book.book_image && book.book_image.length > 0" class="mb-6">
+          <div v-if="selectedBook.book_image && selectedBook.book_image.length > 0" class="mb-6">
             <img
-              :src="book.book_image[0].book_image_url"
-              :alt="book.book_name"
-              class="w-full h-64 object-cover rounded-lg"
+              :src="selectedBook.book_image[0].book_image_url"
+              :alt="selectedBook.book_name"
+              class="w-full h-80 object-cover rounded-lg"
             />
           </div>
 
           <!-- Chapters -->
-          <div v-if="book.chapter && book.chapter.length > 0" class="space-y-8">
-            <div v-for="chapter in book.chapter" :key="chapter.chapter_name" class="border-t border-gray-700 pt-6">
+          <div v-if="selectedBook.chapter && selectedBook.chapter.length > 0" class="space-y-8">
+            <div 
+              v-for="chapter in selectedBook.chapter" 
+              :key="chapter.chapter_name" 
+              class="border-t border-gray-700 pt-6"
+              :ref="el => { if (el) chapterRefs[chapter.chapter_name] = el }"
+            >
               <h3 class="text-xl font-semibold text-gray-200 mb-4">{{ chapter.chapter_name }}</h3>
               
               <!-- Chapter Image -->
@@ -41,18 +47,57 @@
   </template>
   
   <script setup>
-  import { onMounted, computed } from 'vue'
+  import { onMounted, computed, watch, ref } from 'vue'
+  import { useRoute } from 'vue-router'
   import { useSupabaseBookStore } from '@/stores/supabaseBookStore'
   
+  const route = useRoute()
   const bookStore = useSupabaseBookStore()
+  const chapterRefs = ref({})
   
   const books = computed(() => bookStore.getBooks)
+  const selectedBook = computed(() => bookStore.getSelectedBook)
   const isLoading = computed(() => bookStore.getIsLoading)
   const error = computed(() => bookStore.getError)
   
+  const scrollToChapter = (chapterName) => {
+    if (chapterRefs.value[chapterName]) {
+      chapterRefs.value[chapterName].scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }
+  
+  // Watch for route changes to scroll to the correct chapter
+  watch(() => route.query.chapter, (newChapter) => {
+    if (newChapter) {
+      // Small delay to ensure the DOM is updated
+      setTimeout(() => {
+        scrollToChapter(newChapter)
+      }, 100)
+    }
+  }, { immediate: true })
+  
+  // Watch for route changes to select the correct book
+  watch(() => route.query.book, (newBookName) => {
+    if (newBookName && books.value) {
+      const book = books.value.find(b => b.book_name === newBookName)
+      if (book) {
+        bookStore.setSelectedBook(book)
+      }
+    }
+  }, { immediate: true })
+  
   onMounted(async () => {
     await bookStore.fetchBooks()
-    console.log('DEBUG::BookList', books.value)
+    // If there's a book in the URL query, select it
+    if (route.query.book && books.value) {
+      const book = books.value.find(b => b.book_name === route.query.book)
+      if (book) {
+        bookStore.setSelectedBook(book)
+      }
+    }
   })
   </script>
   

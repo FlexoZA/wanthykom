@@ -10,8 +10,11 @@ wanthykom/
 ├── src/
 │   ├── assets/              # Static assets (images, fonts, etc.)
 │   ├── components/          # Reusable Vue components
+│   │   ├── book/           # Book related components
+│   │   │   └── BookList.vue # Book listing and display component
 │   │   ├── header/          # Header related components
 │   │   ├── navigation/      # Navigation components
+│   │   │   └── VerticalNav.vue # Vertical navigation sidebar
 │   │   ├── footer/          # Footer components
 │   │   ├── icons/           # Icon components
 │   │   ├── helpers/         # Helper components
@@ -22,10 +25,12 @@ wanthykom/
 │   ├── composables/         # Vue 3 composables
 │   ├── router/              # Vue Router configuration
 │   ├── stores/              # Pinia stores
+│   │   ├── supabaseBookStore.js    # Supabase store for books
 │   │   ├── supabaseArticleStore.js # Supabase store for articles
 │   │   └── counter.js       # Example counter store
 │   ├── views/               # Page components
-│   │   └── HomeView.vue     # Landing page view
+│   │   ├── HomeView.vue     # Landing page view
+│   │   └── BookView.vue     # Book display view
 │   ├── App.vue              # Root Vue component
 │   └── main.js              # Application entry point
 ├── .env                     # Environment variables
@@ -53,8 +58,18 @@ wanthykom/
 
 ### Components
 
+- **Book Components:**
+  - **BookList.vue:** Displays books with their chapters and images
+    - Hierarchical display of book name, images, and chapters
+    - Responsive image handling
+    - Chapter text formatting
+
 - **Header Components:** Top bar with the main page heading and subheading
-- **Navigation Components:** Vertical navigation sidebar on the left (visible on desktop)
+- **Navigation Components:** 
+  - **VerticalNav.vue:** Vertical navigation sidebar on the left (visible on desktop)
+    - Responsive design (hidden on mobile)
+    - Active route highlighting
+    - Sticky positioning
 - **MainContent.vue:** Main content area, optimized for reading with a medium-dark background
 - **Footer Components:** Footer at the bottom of the page
 
@@ -74,30 +89,33 @@ wanthykom/
   - Uses v-model for two-way binding
   - Built with Composition API
 
-### Example Usage of NotificationToast
+### Using the Supabase Stores
 
-```vue
-<script setup>
-import { ref } from 'vue'
-import NotificationToast from '@/components/helpers/NotificationToast.vue'
+The application includes Pinia stores for interacting with Supabase:
 
-const notificationMessage = ref('')
+#### Book Store
+```javascript
+import { useSupabaseBookStore } from '@/stores/supabaseBookStore'
 
-// Show a notification
-const showNotification = () => {
-  notificationMessage.value = 'Operation completed successfully'
+// In your component setup
+const bookStore = useSupabaseBookStore()
+
+// Fetch books
+const loadBooks = async () => {
+  try {
+    await bookStore.fetchBooks()
+    console.log('Fetched books:', bookStore.getBooks)
+  } catch (error) {
+    console.error('Failed to load books:', error)
+  }
 }
-</script>
 
-<template>
-  <NotificationToast v-model:message="notificationMessage" type="success" :duration="3000" />
-</template>
+// Access book data
+const books = computed(() => bookStore.getBooks)
+const isLoading = computed(() => bookStore.getIsLoading)
 ```
 
-### Using the Supabase Article Store
-
-The application includes a Pinia store for interacting with Supabase:
-
+#### Article Store
 ```javascript
 import { useSupabaseArticleStore } from '@/stores/supabaseArticleStore'
 
