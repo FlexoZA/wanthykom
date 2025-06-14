@@ -63,6 +63,8 @@ wanthykom/
     - Hierarchical display of book name, images, and chapters
     - Responsive image handling
     - Chapter text formatting
+    - Book headers display with name and text
+    - Dark theme optimized layout
 
 - **Header Components:** Top bar with the main page heading and subheading
 - **Navigation Components:** 

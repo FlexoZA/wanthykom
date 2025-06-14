@@ -5,6 +5,7 @@
       <div v-else-if="!selectedBook" class="text-gray-400">Select a book from the navigation</div>
       <div v-else>
         <div class="mb-12">
+          <!-- Book Title -->
           <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ selectedBook.book_name }}</h2>
           
           <!-- Book Image -->
@@ -14,6 +15,14 @@
               :alt="selectedBook.book_name"
               class="w-full h-80 object-cover rounded-lg"
             />
+          </div>
+
+          <!-- Book Headers -->
+          <div v-if="selectedBook.book_header && selectedBook.book_header.length > 0" class="mb-6 space-y-4">
+            <div v-for="header in selectedBook.book_header" :key="header.book_header_name" class="bg-gray-800 p-4 rounded-lg">
+              <h3 class="text-lg font-semibold text-gray-200 mb-2">{{ header.book_header_name }}</h3>
+              <p class="text-gray-300">{{ header.book_header_text }}</p>
+            </div>
           </div>
 
           <!-- Chapters -->

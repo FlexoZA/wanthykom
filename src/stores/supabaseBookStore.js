@@ -31,6 +31,10 @@ export const useSupabaseBookStore = defineStore('supabaseBook', {
           .select(
             `
             book_name,
+            book_header (
+              book_header_name,
+              book_header_text
+            ),
             chapter (
                 chapter_name,
                 chapter_text,
