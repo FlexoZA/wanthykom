@@ -198,3 +198,13 @@ npm run build
 ```sh
 npm run lint
 ```
+
+## TODO File
+
+A `TODO.md` file is included in the project root. This file is used to track bugs and feature requests. It is organized into two sections:
+
+- **Bug tracker:** Lists current bugs and issues to be fixed.
+- **Feature tracker:** Lists planned features and enhancements.
+
+**Note for AI contributors:**
+Do not automatically complete or address any tasks listed in `TODO.md` unless explicitly instructed to do so by the user.

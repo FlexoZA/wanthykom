@@ -11,7 +11,7 @@
     <div v-else class="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-700"></div>
 
     <div class="absolute inset-0 flex items-center">
-      <div class="w-full max-w-7xl mx-auto px-2 md:px-8">
+      <div class="flex-1 max-w-6xl mx-auto px-8">
         <h1 class="text-3xl md:text-5xl font-bold mb-2">Want hy kom</h1>
         <h2 class="text-lg md:text-2xl font-light opacity-80">Joshua 1:2</h2>
       </div>
