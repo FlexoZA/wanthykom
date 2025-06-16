@@ -805,11 +805,170 @@ The application features a robust authentication system built with Supabase Auth
 - **Session Management**: Automatic session handling with persistence across page refreshes
 - **Protected Routes**: Route guards that redirect unauthenticated users to login
 - **Modal Login Dialog**: Reusable login component with loading states and error handling
+- **Input Validation**: Real-time form validation with comprehensive password requirements
+- **Password Visibility Toggle**: Show/hide password functionality for better user experience
 - **Secure Logout**: Safe logout with loading states and proper session cleanup
 - **Remember Me**: Optional session persistence
 - **Error Handling**: User-friendly error messages for authentication failures
 - **Auto-Redirect**: Automatic redirection after successful login/logout
 - **Loading States**: Visual feedback during authentication operations
+
+### Validation System
+
+The application includes a comprehensive validation system that ensures data integrity and provides immediate feedback to users during form input.
+
+#### Validation Utilities (`validation.js`)
+
+The validation system is built around a centralized utility file that defines validation rules and functions:
+
+```javascript
+// Password validation rules
+export const passwordRules = {
+  minLength: 8,
+  requiresNumber: true,
+  requiresSpecial: true,
+  requiresUppercase: true,
+}
+
+// Email validation pattern
+export const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Validation functions
+export const validatePassword = (password) => {
+  if (!password) return ''
+  const errors = []
+
+  if (password.length < passwordRules.minLength) {
+    errors.push(`Password must be at least ${passwordRules.minLength} characters`)
+  }
+  if (passwordRules.requiresNumber && !/\d/.test(password)) {
+    errors.push('Password must contain at least one number')
+  }
+  if (passwordRules.requiresSpecial && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push('Password must contain at least one special character')
+  }
+  if (passwordRules.requiresUppercase && !/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter')
+  }
+
+  return errors.length ? errors.join('. ') : ''
+}
+
+export const validateEmail = (email) => {
+  if (!email) return ''
+  return emailPattern.test(email) ? '' : 'Please enter a valid email address'
+}
+```
+
+#### Password Requirements
+
+The system enforces the following password requirements:
+
+- **Minimum Length**: 8 characters
+- **Numbers**: At least one numeric digit (0-9)
+- **Special Characters**: At least one special character (!@#$%^&*(),.?":{}|<>)
+- **Uppercase Letters**: At least one uppercase letter (A-Z)
+
+#### Email Validation
+
+Email validation uses a robust regex pattern that checks for:
+- Valid email format with @ symbol
+- Domain with proper structure
+- No whitespace or invalid characters
+
+#### Integration with Login Form
+
+The validation system is seamlessly integrated into the `LoginDialog.vue` component:
+
+```javascript
+// Import validation functions
+import { validateEmail, validatePassword } from '@/utils/validation'
+
+// Validation states
+const emailError = ref('')
+const passwordError = ref('')
+
+// Real-time validation methods
+const validateEmailField = () => {
+  emailError.value = validateEmail(email.value)
+}
+
+const validatePasswordField = () => {
+  passwordError.value = validatePassword(password.value)
+}
+
+// Form validation computed property
+const isFormValid = computed(() => {
+  return email.value && 
+         password.value && 
+         !emailError.value && 
+         !passwordError.value
+})
+```
+
+#### Validation Features
+
+- **Real-Time Validation**: Validation occurs on field blur for immediate feedback
+- **Visual Feedback**: Input borders change color (red) when validation fails
+- **Error Messages**: Clear, user-friendly error messages below each field
+- **Form State Management**: Submit button is disabled when form is invalid
+- **Progressive Enhancement**: Validation runs before form submission as a final check
+
+#### Password Visibility Toggle
+
+The login form includes a password visibility toggle for enhanced user experience:
+
+```vue
+<div class="relative mt-1">
+  <input
+    :type="showPassword ? 'text' : 'password'"
+    v-model="password"
+    // ... other props
+  />
+  <button
+    type="button"
+    @click="togglePasswordVisibility"
+    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+  >
+    <!-- Eye icons for show/hide state -->
+  </button>
+</div>
+```
+
+##### Toggle Features
+
+- **Dynamic Input Type**: Switches between `password` and `text` input types
+- **Visual Icons**: Eye icons that change based on visibility state
+- **Accessibility**: Proper button labeling and keyboard navigation
+- **Disabled State**: Toggle is disabled during form submission
+- **Consistent Styling**: Matches the overall form design
+
+#### Usage Examples
+
+```javascript
+// Basic validation
+const emailError = validateEmail('user@example.com') // Returns ''
+const emailError = validateEmail('invalid-email') // Returns error message
+
+const passwordError = validatePassword('Password123!') // Returns ''
+const passwordError = validatePassword('weak') // Returns detailed error message
+
+// In components
+import { validateEmail, validatePassword } from '@/utils/validation'
+
+// Reactive validation
+const isEmailValid = computed(() => !validateEmail(email.value))
+const isPasswordValid = computed(() => !validatePassword(password.value))
+```
+
+#### Benefits
+
+- **Improved Security**: Enforces strong password requirements
+- **Better User Experience**: Real-time feedback prevents form submission errors
+- **Consistency**: Centralized validation rules ensure consistent behavior
+- **Maintainability**: Easy to update validation rules across the application
+- **Accessibility**: Clear error messages help users understand requirements
+- **Progressive Enhancement**: Works with or without JavaScript
 
 ### Authentication Store (`authenticationStore.js`)
 
