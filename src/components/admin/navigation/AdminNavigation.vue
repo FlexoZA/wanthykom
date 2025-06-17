@@ -15,6 +15,15 @@
             Dashboard
           </RouterLink>
         </li>
+        <li>
+          <RouterLink
+            to="/admin/articles"
+            class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
+            active-class="bg-gray-700 text-white"
+          >
+            Articles
+          </RouterLink>
+        </li>
       </ul>
     </nav>
     <div class="absolute bottom-0 w-full p-4">
