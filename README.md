@@ -5,12 +5,14 @@ A modern web application built with Vue 3, Vite, and Supabase.
 ## Features
 
 - **Article System**
+
   - Rich content display with text and images
   - Responsive design with proper loading states
   - Articles ordered by creation date
   - Error handling and user-friendly feedback
 
 - **Book Reading System**
+
   - Multi-chapter books with navigation
   - Smart collapsible sidebar navigation
   - Deep-linking to specific books and chapters
@@ -18,11 +20,13 @@ A modern web application built with Vue 3, Vite, and Supabase.
   - Book headers and chapter-specific images
 
 - **Dynamic Layout System**
+
   - Automatic layout switching based on routes
   - Separate public and admin interfaces
   - Responsive design with mobile optimization
 
 - **Authentication System**
+
   - Supabase Auth integration with session management
   - Protected routes with navigation guards
   - Modal login dialog with loading states
@@ -124,9 +128,9 @@ The application uses a dynamic layout system that automatically switches between
   path: '/admin',
   name: 'admin',
   component: () => import('@/views/admin/AdminDashboard.vue'),
-  meta: { 
+  meta: {
     layout: 'admin',
-    requiresAuth: true 
+    requiresAuth: true
   }
 }
 ```
@@ -144,6 +148,7 @@ router.beforeEach((to, from, next) => {
 ### Available Layouts
 
 #### Default Layout (`DefaultLayout.vue`)
+
 - **Purpose**: Public-facing pages (home, books)
 - **Features**:
   - Top header with branding
@@ -168,6 +173,7 @@ router.beforeEach((to, from, next) => {
 ```
 
 #### Admin Layout (`AdminLayout.vue`)
+
 - **Purpose**: Administrative interface
 - **Features**:
   - Fixed vertical sidebar with admin navigation
@@ -199,6 +205,7 @@ router.beforeEach((to, from, next) => {
 - **AppFooter.vue**: Application footer
 
 This system provides:
+
 - **Automatic layout switching** based on routes
 - **Clean separation** between public and admin interfaces
 - **Consistent styling** within each layout type
@@ -276,7 +283,7 @@ The main article display component with the following features:
     <div v-else>
       <div v-for="article in articles" :key="article.id">
         <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ article.article_name }}</h2>
-        
+
         <!-- Article Image -->
         <div v-if="article.article_image && article.article_image.length > 0" class="mb-6">
           <img
@@ -335,21 +342,521 @@ The store uses a relational query to fetch articles with their images:
 ```javascript
 const { data, error } = await supabase
   .from('article')
-  .select(`
+  .select(
+    `
     article_name,
     article_text,
     article_image (
       article_image_url
     )
-  `)
+  `,
+  )
   .order('created_at', { ascending: false })
 ```
 
 This approach:
+
 - Fetches articles and their related images in a single query
 - Orders articles by creation date (newest first)
 - Maintains referential integrity between articles and images
 - Provides efficient data loading with minimal API calls
+
+## Admin Article Management System
+
+The application features a comprehensive admin article management system that allows administrators to create, view, edit, and delete articles through a modern, component-based interface. The system uses Vue 3's Composition API throughout and provides a seamless user experience without page reloads.
+
+### Features
+
+- **Complete CRUD Operations**: Create, read, update, and delete articles
+- **Component-Based Architecture**: Modern Vue 3 components with event-driven communication
+- **Rich Form Interface**: Article creation and editing with validation
+- **Real-Time Updates**: Immediate UI updates after operations
+- **Confirmation Dialogs**: Safe deletion with user confirmation
+- **Loading States**: Visual feedback during all operations
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Responsive Design**: Optimized for all screen sizes
+- **Enable/Disable Toggle**: Custom switch component for article status
+- **Image Support**: Dropdown for article image selection (extensible)
+- **Date Tracking**: Automatic creation and update timestamp management
+
+### Architecture Overview
+
+The admin article system uses a component-based architecture that manages different views through local state rather than routing:
+
+```
+ArticlesView (Main Container)
+├── AdminArticleList (List all articles)
+├── AddArticle (Create/Edit form)
+├── ArticleView (View single article)
+└── UpdateArticle (Edit wrapper component)
+```
+
+### Database Structure
+
+The admin system works with the same database structure as the public article system but includes additional fields for management:
+
+```sql
+-- Enhanced articles table for admin management
+article (
+  id: uuid (primary key)
+  article_name: text
+  article_text: text
+  enable: boolean (default: false)
+  created_at: timestamp
+  updated_at: timestamp
+  user_id: uuid (for RLS policies)
+)
+
+-- Article images (unchanged)
+article_image (
+  id: uuid (primary key)
+  article_id: uuid (foreign key)
+  article_image_url: text
+)
+```
+
+### Admin Article Store (`supabaseAdminArticleStore.js`)
+
+The admin store provides comprehensive CRUD operations with proper error handling:
+
+```javascript
+import { useSupabaseAdminArticleStore } from '@/stores/admin/supabaseAdminArticleStore'
+
+// In your component
+const articleStore = useSupabaseAdminArticleStore()
+
+// Fetch all articles
+await articleStore.fetchArticles()
+
+// Fetch single article
+const article = await articleStore.fetchArticle(articleId)
+
+// Create new article
+await articleStore.createArticle({
+  article_name: 'Title',
+  article_text: 'Content',
+  enable: true,
+})
+
+// Update existing article
+await articleStore.updateArticle(articleId, {
+  article_name: 'Updated Title',
+  article_text: 'Updated Content',
+  enable: false,
+})
+
+// Delete article
+await articleStore.deleteArticle(articleId)
+
+// Access reactive state
+const articles = computed(() => articleStore.getArticles)
+const isLoading = computed(() => articleStore.getIsLoading)
+const error = computed(() => articleStore.getError)
+```
+
+#### Store Methods
+
+- **`fetchArticles()`**: Retrieves all articles with images and metadata
+- **`fetchArticle(id)`**: Retrieves a single article by ID
+- **`createArticle(data)`**: Creates a new article with automatic timestamps
+- **`updateArticle(id, data)`**: Updates an existing article with new timestamp
+- **`deleteArticle(id)`**: Safely deletes an article and refreshes the list
+- **Getters**: `getArticles`, `getIsLoading`, `getError` for reactive state access
+
+### Main Container (`ArticlesView.vue`)
+
+The main container manages different views through local state:
+
+```vue
+<template>
+  <div class="p-6">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-white">Articles Management</h1>
+      <p class="text-gray-400 mt-2">Manage your articles</p>
+    </div>
+
+    <!-- Dynamic Component Rendering -->
+    <AdminArticleList
+      v-if="currentView === 'list'"
+      @create-article="currentView = 'create'"
+      @view-article="handleViewArticle"
+      @edit-article="handleEditArticle"
+      @delete-article="handleDeleteArticle"
+    />
+
+    <AddArticle
+      v-else-if="currentView === 'create'"
+      @article-created="handleArticleCreated"
+      @cancel="currentView = 'list'"
+    />
+
+    <ArticleView
+      v-else-if="currentView === 'view'"
+      :article-id="selectedArticleId"
+      @edit-article="handleEditArticle"
+      @back="currentView = 'list'"
+    />
+
+    <UpdateArticle
+      v-else-if="currentView === 'edit'"
+      :article-id="selectedArticleId"
+      @article-updated="handleArticleUpdated"
+      @cancel="currentView = 'list'"
+    />
+  </div>
+</template>
+```
+
+#### State Management
+
+```javascript
+const currentView = ref('list') // 'list' | 'create' | 'view' | 'edit'
+const selectedArticleId = ref(null)
+
+// Event handlers for seamless navigation
+const handleViewArticle = (articleId) => {
+  selectedArticleId.value = articleId
+  currentView.value = 'view'
+}
+
+const handleEditArticle = (articleId) => {
+  selectedArticleId.value = articleId
+  currentView.value = 'edit'
+}
+
+const handleDeleteArticle = async (articleId) => {
+  await articleStore.deleteArticle(articleId)
+  // List automatically updates through reactive store
+}
+```
+
+### Article List Component (`AdminArticleList.vue`)
+
+Displays all articles in a responsive grid with action buttons:
+
+```vue
+<template>
+  <div class="space-y-4">
+    <!-- Create Button -->
+    <div class="flex justify-end">
+      <button @click="$emit('create-article')" class="bg-green-600 hover:bg-green-700">
+        <svg><!-- Plus icon --></svg>
+        Create New Article
+      </button>
+    </div>
+
+    <!-- Articles Grid -->
+    <div class="grid gap-4">
+      <div v-for="article in articles" :key="article.id" class="bg-gray-800 rounded-lg p-4">
+        <div class="flex gap-4">
+          <!-- Article Image -->
+          <div class="w-24 h-24">
+            <img
+              v-if="article.article_image?.length"
+              :src="article.article_image[0].article_image_url"
+            />
+            <div v-else class="bg-gray-600 flex items-center justify-center">
+              <svg><!-- Image placeholder icon --></svg>
+            </div>
+          </div>
+
+          <!-- Article Details -->
+          <div class="flex-1">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="text-lg font-semibold text-white">{{ article.article_name }}</h3>
+              <span
+                :class="article.enable ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'"
+              >
+                {{ article.enable ? 'Enabled' : 'Disabled' }}
+              </span>
+            </div>
+
+            <p class="text-gray-400 mb-3">{{ article.article_text.substring(0, 120) }}...</p>
+
+            <!-- Timestamps -->
+            <div class="text-xs text-gray-500 mb-3">
+              <div>Created: {{ formatDate(article.created_at) }}</div>
+              <div>
+                Last updated:
+                {{ article.updated_at ? formatDate(article.updated_at) : 'No updates yet' }}
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center">
+              <div class="flex gap-2">
+                <button @click="viewArticle(article.id)" class="bg-blue-600 hover:bg-blue-700">
+                  View Article
+                </button>
+                <button @click="editArticle(article.id)" class="bg-gray-600 hover:bg-gray-700">
+                  Edit Article
+                </button>
+              </div>
+              <button @click="deleteArticle(article.id)" class="bg-red-600 hover:bg-red-700">
+                <svg><!-- Trash icon --></svg>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+#### List Features
+
+- **Responsive Grid**: Adapts to different screen sizes
+- **Article Previews**: Shows title, truncated content, and metadata
+- **Status Indicators**: Visual badges for enabled/disabled articles
+- **Action Buttons**: View, edit, and delete with clear visual hierarchy
+- **Image Handling**: Displays article images or placeholder icons
+- **Date Formatting**: Human-readable creation and update dates
+- **Delete Confirmation**: Requires user confirmation before deletion
+
+### Article Form Component (`AddArticle.vue`)
+
+A versatile form component that handles both creation and editing:
+
+```vue
+<template>
+  <div class="max-w-4xl mx-auto p-6">
+    <h2 class="text-2xl font-bold text-white mb-6">
+      {{ mode === 'create' ? 'Add New Article' : 'Edit Article' }}
+    </h2>
+
+    <form @submit.prevent="handleSubmit" class="space-y-6">
+      <!-- Enable/Disable Toggle -->
+      <div class="flex items-center justify-between">
+        <label class="text-white">Enable Article</label>
+        <button
+          type="button"
+          @click="formData.enable = !formData.enable"
+          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+          :class="formData.enable ? 'bg-green-600' : 'bg-gray-600'"
+        >
+          <span
+            class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+            :class="formData.enable ? 'translate-x-6' : 'translate-x-1'"
+          />
+        </button>
+      </div>
+
+      <!-- Article Image Dropdown -->
+      <div>
+        <label class="block text-white mb-2">Article Image</label>
+        <select
+          v-model="formData.article_image_id"
+          class="w-full bg-gray-700 border border-gray-600 rounded-md text-white"
+        >
+          <option value="">Select an image</option>
+          <!-- Extensible for future image management -->
+        </select>
+      </div>
+
+      <!-- Article Title -->
+      <div>
+        <label class="block text-white mb-2">Article Title</label>
+        <input
+          v-model="formData.article_name"
+          type="text"
+          required
+          class="w-full bg-gray-700 border border-gray-600 rounded-md text-white"
+          placeholder="Enter article title"
+        />
+      </div>
+
+      <!-- Article Content -->
+      <div>
+        <label class="block text-white mb-2">Article Text</label>
+        <textarea
+          v-model="formData.article_text"
+          required
+          rows="10"
+          class="w-full bg-gray-700 border border-gray-600 rounded-md text-white"
+          placeholder="Enter article content"
+        ></textarea>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex justify-end gap-2">
+        <button
+          v-if="mode === 'create'"
+          type="button"
+          @click="$emit('cancel')"
+          class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          :disabled="isSubmitting"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+        >
+          {{ isSubmitting ? 'Saving...' : mode === 'create' ? 'Create Article' : 'Update Article' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</template>
+```
+
+#### Form Features
+
+- **Dual Mode**: Handles both creation and editing with the same component
+- **Custom Toggle Switch**: Beautiful enable/disable toggle with smooth animations
+- **Form Validation**: Required fields with proper input types
+- **Loading States**: Disabled inputs and loading text during submission
+- **Auto-Population**: Pre-fills form data when editing existing articles
+- **Responsive Design**: Optimized layout for all screen sizes
+- **Event Communication**: Emits events for parent component handling
+
+### Article View Component (`ArticleView.vue`)
+
+Displays a single article with full content and metadata:
+
+```vue
+<template>
+  <div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-2xl font-bold text-white">View Article</h1>
+      <div class="flex gap-2">
+        <button @click="$emit('edit-article', articleId)" class="bg-blue-600 hover:bg-blue-700">
+          <svg><!-- Edit icon --></svg>
+          Edit Article
+        </button>
+        <button @click="$emit('back')" class="bg-gray-600 hover:bg-gray-700">
+          <svg><!-- Back icon --></svg>
+          Back to Articles
+        </button>
+      </div>
+    </div>
+
+    <div v-if="article" class="bg-gray-800 rounded-lg p-6">
+      <!-- Status Badge -->
+      <div class="mb-6">
+        <span
+          :class="article.enable ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'"
+          class="px-3 py-1 text-sm rounded-full"
+        >
+          {{ article.enable ? 'Enabled' : 'Disabled' }}
+        </span>
+      </div>
+
+      <!-- Article Image -->
+      <div v-if="article.article_image?.length" class="mb-6">
+        <img
+          :src="article.article_image[0].article_image_url"
+          :alt="article.article_name"
+          class="w-full h-64 object-cover rounded-lg"
+        />
+      </div>
+
+      <!-- Article Content -->
+      <h2 class="text-3xl font-bold text-white mb-4">{{ article.article_name }}</h2>
+      <div class="prose prose-invert max-w-none">
+        <p class="text-gray-300 whitespace-pre-wrap">{{ article.article_text }}</p>
+      </div>
+
+      <!-- Metadata -->
+      <div class="mt-8 pt-6 border-t border-gray-700 text-sm text-gray-400">
+        <div>Created: {{ formatDate(article.created_at) }}</div>
+        <div>
+          Last updated: {{ article.updated_at ? formatDate(article.updated_at) : 'No updates yet' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+### Event-Driven Communication
+
+The system uses a clean event-driven architecture:
+
+```javascript
+// Component events flow
+AdminArticleList
+├── @create-article → ArticlesView → Switch to create mode
+├── @view-article → ArticlesView → Switch to view mode
+├── @edit-article → ArticlesView → Switch to edit mode
+└── @delete-article → ArticlesView → Call store delete method
+
+AddArticle
+├── @article-created → ArticlesView → Return to list
+├── @article-updated → ArticlesView → Return to list
+└── @cancel → ArticlesView → Return to list
+
+ArticleView
+├── @edit-article → ArticlesView → Switch to edit mode
+└── @back → ArticlesView → Return to list
+```
+
+### Security and Data Integrity
+
+- **Row Level Security (RLS)**: Supabase RLS policies protect article operations
+- **User Authentication**: All operations require valid admin authentication
+- **Input Validation**: Form validation prevents invalid data submission
+- **Error Handling**: Comprehensive error handling with user feedback
+- **Transaction Safety**: Database operations are atomic and safe
+- **Confirmation Dialogs**: Destructive operations require user confirmation
+
+### Performance Optimizations
+
+- **Reactive Updates**: UI updates immediately without full page reloads
+- **Efficient Queries**: Single queries fetch related data (articles with images)
+- **Component Reuse**: Single form component handles both create and edit
+- **Lazy Loading**: Components are loaded only when needed
+- **State Management**: Centralized state prevents unnecessary API calls
+- **Image Optimization**: Responsive images with proper sizing
+
+### Usage Examples
+
+#### Creating a New Article
+
+```javascript
+// User clicks "Create New Article"
+// → ArticlesView switches to create mode
+// → AddArticle component renders in create mode
+// → User fills form and submits
+// → Store creates article in database
+// → UI returns to list with new article visible
+```
+
+#### Editing an Article
+
+```javascript
+// User clicks "Edit Article" on an article
+// → ArticlesView switches to edit mode with article ID
+// → UpdateArticle component fetches article data
+// → AddArticle component renders in edit mode with pre-filled data
+// → User modifies and submits
+// → Store updates article with new timestamp
+// → UI returns to list with updated article
+```
+
+#### Deleting an Article
+
+```javascript
+// User clicks "Delete" button
+// → Confirmation dialog appears
+// → User confirms deletion
+// → Store deletes article from database
+// → List automatically updates (article removed)
+```
+
+### Benefits of Component Architecture
+
+- **No Page Reloads**: Seamless user experience with instant updates
+- **Reusable Components**: Single form handles both create and edit operations
+- **Clean State Management**: Local state eliminates routing complexity
+- **Better Performance**: No unnecessary route changes or component re-mounting
+- **Easier Testing**: Components can be tested in isolation
+- **Maintainable Code**: Clear separation of concerns and event-driven communication
+- **Scalable Design**: Easy to add new features or modify existing ones
+
+This admin article management system provides a modern, efficient interface for content management while maintaining clean architecture principles and excellent user experience.
 
 ## Book System
 
@@ -456,16 +963,25 @@ The main book display component with advanced features:
     <div v-else>
       <!-- Book Title -->
       <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ selectedBook.book_name }}</h2>
-      
+
       <!-- Book Cover Image -->
       <div v-if="selectedBook.book_image && selectedBook.book_image.length > 0" class="mb-6">
-        <img :src="selectedBook.book_image[0].book_image_url" class="w-full h-80 object-cover rounded-lg" />
+        <img
+          :src="selectedBook.book_image[0].book_image_url"
+          class="w-full h-80 object-cover rounded-lg"
+        />
       </div>
 
       <!-- Book Headers (Introduction/Summary) -->
-      <div v-if="selectedBook.book_header && selectedBook.book_header.length > 0" class="mb-6 space-y-4">
-        <div v-for="header in selectedBook.book_header" :key="header.book_header_name" 
-             class="bg-gray-800 p-4 rounded-lg">
+      <div
+        v-if="selectedBook.book_header && selectedBook.book_header.length > 0"
+        class="mb-6 space-y-4"
+      >
+        <div
+          v-for="header in selectedBook.book_header"
+          :key="header.book_header_name"
+          class="bg-gray-800 p-4 rounded-lg"
+        >
           <h3 class="text-lg font-semibold text-gray-200 mb-2">{{ header.book_header_name }}</h3>
           <p class="text-gray-300">{{ header.book_header_text }}</p>
         </div>
@@ -473,15 +989,24 @@ The main book display component with advanced features:
 
       <!-- Chapters -->
       <div v-if="selectedBook.chapter && selectedBook.chapter.length > 0" class="space-y-8">
-        <div v-for="chapter in selectedBook.chapter" :key="chapter.chapter_name" 
-             class="border-t border-gray-700 pt-6"
-             :ref="el => { if (el) chapterRefs[chapter.chapter_name] = el }">
+        <div
+          v-for="chapter in selectedBook.chapter"
+          :key="chapter.chapter_name"
+          class="border-t border-gray-700 pt-6"
+          :ref="
+            (el) => {
+              if (el) chapterRefs[chapter.chapter_name] = el
+            }
+          "
+        >
           <h3 class="text-xl font-semibold text-gray-200 mb-4">{{ chapter.chapter_name }}</h3>
-          
+
           <!-- Chapter Image -->
           <div v-if="chapter.chapter_image && chapter.chapter_image.length > 0" class="mb-4">
-            <img :src="chapter.chapter_image[0].chapter_image_url" 
-                 class="w-full h-48 object-cover rounded-lg" />
+            <img
+              :src="chapter.chapter_image[0].chapter_image_url"
+              class="w-full h-48 object-cover rounded-lg"
+            />
           </div>
 
           <!-- Chapter Content -->
@@ -515,11 +1040,15 @@ The book navigation provides an intuitive way to browse books and chapters:
 
     <!-- Book Navigation -->
     <div v-for="book in books" :key="book.book_name" class="mb-4">
-      <div class="flex items-center justify-between py-2 px-3 rounded hover:bg-gray-700"
-           :class="{ 'bg-gray-700': isBookActive(book.book_name) }"
-           @click="toggleBook(book.book_name)">
-        <RouterLink :to="{ name: 'books', query: { book: book.book_name }}" 
-                   class="font-semibold flex-grow">
+      <div
+        class="flex items-center justify-between py-2 px-3 rounded hover:bg-gray-700"
+        :class="{ 'bg-gray-700': isBookActive(book.book_name) }"
+        @click="toggleBook(book.book_name)"
+      >
+        <RouterLink
+          :to="{ name: 'books', query: { book: book.book_name } }"
+          class="font-semibold flex-grow"
+        >
           {{ book.book_name }}
         </RouterLink>
         <span>{{ expandedBooks[book.book_name] ? '▼' : '▶' }}</span>
@@ -527,9 +1056,12 @@ The book navigation provides an intuitive way to browse books and chapters:
 
       <!-- Chapter Links -->
       <div v-if="expandedBooks[book.book_name] && book.chapter" class="ml-4 mt-2 space-y-1">
-        <RouterLink v-for="chapter in book.chapter" :key="chapter.chapter_name"
-                   :to="{ name: 'books', query: { book: book.book_name, chapter: chapter.chapter_name }}"
-                   class="block py-1 px-3 rounded hover:bg-gray-700 text-sm">
+        <RouterLink
+          v-for="chapter in book.chapter"
+          :key="chapter.chapter_name"
+          :to="{ name: 'books', query: { book: book.book_name, chapter: chapter.chapter_name } }"
+          class="block py-1 px-3 rounded hover:bg-gray-700 text-sm"
+        >
           {{ chapter.chapter_name }}
         </RouterLink>
       </div>
@@ -582,7 +1114,8 @@ The store uses a complex relational query to fetch complete book data:
 ```javascript
 const { data, error } = await supabase
   .from('book')
-  .select(`
+  .select(
+    `
     book_name,
     book_header (
       book_header_name,
@@ -598,11 +1131,13 @@ const { data, error } = await supabase
     book_image (
       book_image_url
     )
-  `)
+  `,
+  )
   .order('created_at', { ascending: true })
 ```
 
 This approach:
+
 - Fetches books with all related data in a single query
 - Maintains proper relationships between books, chapters, headers, and images
 - Orders books by creation date
@@ -628,20 +1163,30 @@ The default layout features a sophisticated vertical navigation system (`Vertica
 
 ```vue
 <template>
-  <nav class="hidden md:flex flex-col gap-2 py-8 px-4 bg-gray-800 text-gray-200 w-56 min-w-[12rem] border-l border-gray-700 sticky top-0 h-[calc(100vh-4rem)]">
+  <nav
+    class="hidden md:flex flex-col gap-2 py-8 px-4 bg-gray-800 text-gray-200 w-56 min-w-[12rem] border-l border-gray-700 sticky top-0 h-[calc(100vh-4rem)]"
+  >
     <!-- Home Link -->
-    <RouterLink to="/" class="py-2 px-3 rounded hover:bg-gray-700 transition-colors mb-4 font-semibold" active-class="bg-gray-700">
+    <RouterLink
+      to="/"
+      class="py-2 px-3 rounded hover:bg-gray-700 transition-colors mb-4 font-semibold"
+      active-class="bg-gray-700"
+    >
       Voorwoord
     </RouterLink>
 
     <!-- Dynamic Book Navigation -->
     <div v-for="book in books" :key="book.book_name" class="mb-4">
       <!-- Book Header with Toggle -->
-      <div class="flex items-center justify-between py-2 px-3 rounded hover:bg-gray-700 transition-colors cursor-pointer"
-           :class="{ 'bg-gray-700': isBookActive(book.book_name) }"
-           @click="toggleBook(book.book_name)">
-        <RouterLink :to="{ name: 'books', query: { book: book.book_name }}" 
-                   class="font-semibold flex-grow">
+      <div
+        class="flex items-center justify-between py-2 px-3 rounded hover:bg-gray-700 transition-colors cursor-pointer"
+        :class="{ 'bg-gray-700': isBookActive(book.book_name) }"
+        @click="toggleBook(book.book_name)"
+      >
+        <RouterLink
+          :to="{ name: 'books', query: { book: book.book_name } }"
+          class="font-semibold flex-grow"
+        >
           {{ book.book_name }}
         </RouterLink>
         <span class="ml-2">{{ expandedBooks[book.book_name] ? '▼' : '▶' }}</span>
@@ -649,10 +1194,13 @@ The default layout features a sophisticated vertical navigation system (`Vertica
 
       <!-- Collapsible Chapter List -->
       <div v-if="expandedBooks[book.book_name] && book.chapter" class="ml-4 mt-2 space-y-1">
-        <RouterLink v-for="chapter in book.chapter" :key="chapter.chapter_name"
-                   :to="{ name: 'books', query: { book: book.book_name, chapter: chapter.chapter_name }}"
-                   class="block py-1 px-3 rounded hover:bg-gray-700 transition-colors text-sm"
-                   :class="{ 'bg-gray-700': isChapterActive(book.book_name, chapter.chapter_name) }">
+        <RouterLink
+          v-for="chapter in book.chapter"
+          :key="chapter.chapter_name"
+          :to="{ name: 'books', query: { book: book.book_name, chapter: chapter.chapter_name } }"
+          class="block py-1 px-3 rounded hover:bg-gray-700 transition-colors text-sm"
+          :class="{ 'bg-gray-700': isChapterActive(book.book_name, chapter.chapter_name) }"
+        >
           {{ chapter.chapter_name }}
         </RouterLink>
       </div>
@@ -672,15 +1220,15 @@ const isBookActive = (bookName) => {
 }
 
 const isChapterActive = (bookName, chapterName) => {
-  return route.name === 'books' && 
-         route.query.book === bookName && 
-         route.query.chapter === chapterName
+  return (
+    route.name === 'books' && route.query.book === bookName && route.query.chapter === chapterName
+  )
 }
 
 // Smart toggle functionality (accordion-style)
 const toggleBook = (bookName) => {
   // Close all other books
-  Object.keys(expandedBooks.value).forEach(key => {
+  Object.keys(expandedBooks.value).forEach((key) => {
     if (key !== bookName) {
       expandedBooks.value[key] = false
     }
@@ -696,23 +1244,27 @@ The navigation automatically responds to URL changes and expands the appropriate
 
 ```javascript
 // Watch for route changes to automatically expand the selected book
-watch(() => route.query.book, (newBook) => {
-  if (newBook) {
-    // Close all other books
-    Object.keys(expandedBooks.value).forEach(key => {
-      if (key !== newBook) {
+watch(
+  () => route.query.book,
+  (newBook) => {
+    if (newBook) {
+      // Close all other books
+      Object.keys(expandedBooks.value).forEach((key) => {
+        if (key !== newBook) {
+          expandedBooks.value[key] = false
+        }
+      })
+      // Expand the selected book
+      expandedBooks.value[newBook] = true
+    } else {
+      // If no book is selected, close all books
+      Object.keys(expandedBooks.value).forEach((key) => {
         expandedBooks.value[key] = false
-      }
-    })
-    // Expand the selected book
-    expandedBooks.value[newBook] = true
-  } else {
-    // If no book is selected, close all books
-    Object.keys(expandedBooks.value).forEach(key => {
-      expandedBooks.value[key] = false
-    })
-  }
-}, { immediate: true })
+      })
+    }
+  },
+  { immediate: true },
+)
 ```
 
 ### Integration with Default Layout
@@ -866,12 +1418,13 @@ The system enforces the following password requirements:
 
 - **Minimum Length**: 8 characters
 - **Numbers**: At least one numeric digit (0-9)
-- **Special Characters**: At least one special character (!@#$%^&*(),.?":{}|<>)
+- **Special Characters**: At least one special character (!@#$%^&\*(),.?":{}|<>)
 - **Uppercase Letters**: At least one uppercase letter (A-Z)
 
 #### Email Validation
 
 Email validation uses a robust regex pattern that checks for:
+
 - Valid email format with @ symbol
 - Domain with proper structure
 - No whitespace or invalid characters
@@ -899,10 +1452,7 @@ const validatePasswordField = () => {
 
 // Form validation computed property
 const isFormValid = computed(() => {
-  return email.value && 
-         password.value && 
-         !emailError.value && 
-         !passwordError.value
+  return email.value && password.value && !emailError.value && !passwordError.value
 })
 ```
 
@@ -1014,7 +1564,10 @@ export const useAuthStore = defineStore('auth', () => {
   const initialize = async () => {
     try {
       // Get initial session
-      const { data: { session: initialSession }, error } = await supabase.auth.getSession()
+      const {
+        data: { session: initialSession },
+        error,
+      } = await supabase.auth.getSession()
       if (error) throw error
 
       session.value = initialSession
@@ -1052,7 +1605,10 @@ A reusable modal dialog for authentication:
 
 ```vue
 <template>
-  <div v-if="modelValue" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div
+    v-if="modelValue"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
     <div class="w-full max-w-md p-8 space-y-8 bg-gray-800 rounded-lg shadow-xl relative">
       <!-- Close button -->
       <button @click="emit('update:modelValue', false)" class="absolute top-4 right-4">×</button>
@@ -1067,14 +1623,24 @@ A reusable modal dialog for authentication:
 
       <form @submit.prevent="handleSubmit" class="mt-8 space-y-6">
         <!-- Email Input -->
-        <input v-model="email" type="email" required :disabled="isLoading" 
-               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" 
-               placeholder="Enter your email" />
+        <input
+          v-model="email"
+          type="email"
+          required
+          :disabled="isLoading"
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+          placeholder="Enter your email"
+        />
 
         <!-- Password Input -->
-        <input v-model="password" type="password" required :disabled="isLoading"
-               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-               placeholder="Enter your password" />
+        <input
+          v-model="password"
+          type="password"
+          required
+          :disabled="isLoading"
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+          placeholder="Enter your password"
+        />
 
         <!-- Remember Me -->
         <div class="flex items-center justify-between">
@@ -1086,8 +1652,11 @@ A reusable modal dialog for authentication:
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" :disabled="isLoading" 
-                class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+        <button
+          type="submit"
+          :disabled="isLoading"
+          class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+        >
           {{ isLoading ? 'Signing in...' : 'Sign in' }}
         </button>
       </form>
@@ -1134,7 +1703,7 @@ const handleLogin = async (credentials) => {
   try {
     isLoading.value = true
     const { data, error } = await authStore.signIn(credentials.email, credentials.password)
-    
+
     if (error) {
       loginDialog.value?.setError(error.message)
       return
@@ -1205,7 +1774,7 @@ const handleLogout = async () => {
   try {
     isLoggingOut.value = true
     const { error } = await authStore.signOut()
-    
+
     if (error) {
       console.error('Logout failed:', error.message)
       return
@@ -1245,6 +1814,7 @@ const handleLogout = async () => {
 ### Usage Examples
 
 #### Check Authentication Status
+
 ```javascript
 // In any component
 const authStore = useAuthStore()
@@ -1252,6 +1822,7 @@ const isAuthenticated = computed(() => !!authStore.getCurrentUser())
 ```
 
 #### Conditional Rendering Based on Auth
+
 ```vue
 <template>
   <div v-if="isAuthenticated">
@@ -1265,6 +1836,7 @@ const isAuthenticated = computed(() => !!authStore.getCurrentUser())
 ```
 
 #### Programmatic Navigation
+
 ```javascript
 // Redirect to login
 router.push('/login')

@@ -14,21 +14,21 @@ const router = createRouter({
       name: 'home',
       component: () => import('@/views/HomeView.vue'),
       meta: {
-        layout: 'default'
-      }
+        layout: 'default',
+      },
     },
     {
       path: '/books',
       name: 'books',
       component: () => import('../views/BookView.vue'),
       meta: {
-        layout: 'default'
-      }
+        layout: 'default',
+      },
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/auth/LoginView.vue')
+      component: () => import('@/views/auth/LoginView.vue'),
     },
     {
       path: '/admin',
@@ -36,19 +36,19 @@ const router = createRouter({
       component: () => import('@/views/admin/AdminDashboard.vue'),
       meta: {
         layout: 'admin',
-        requiresAuth: true
-      }
+        requiresAuth: true,
+      },
     },
     {
       path: '/admin/articles',
       name: 'admin-articles',
-      component: () => import('@/views/admin/AdminArticlesView.vue'),
+      component: () => import('@/views/admin/article/ArticlesView.vue'),
       meta: {
         layout: 'admin',
-        requiresAuth: true
-      }
-    }
-  ]
+        requiresAuth: true,
+      },
+    },
+  ],
 })
 
 // Navigation guard to check authentication

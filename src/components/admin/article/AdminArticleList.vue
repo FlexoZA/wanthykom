@@ -1,5 +1,23 @@
 <template>
   <div class="space-y-4">
+    <!-- Create New Article Button -->
+    <div class="flex justify-end">
+      <button
+        @click="$emit('create-article')"
+        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors flex items-center gap-2"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        Create New Article
+      </button>
+    </div>
+
     <!-- Loading State -->
     <div v-if="isLoading" class="text-gray-400 text-center py-8">
       <div class="animate-pulse">Loading articles...</div>
@@ -8,8 +26,8 @@
     <!-- Error State -->
     <div v-else-if="error" class="text-red-400 text-center py-8">
       <p>Error loading articles: {{ error }}</p>
-      <button 
-        @click="articleStore.fetchArticles()" 
+      <button
+        @click="articleStore.fetchArticles()"
         class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
       >
         Retry
@@ -23,26 +41,36 @@
 
     <!-- Articles Grid -->
     <div v-else class="grid gap-4">
-      <div 
-        v-for="article in articles" 
+      <div
+        v-for="article in articles"
         :key="article.id"
         class="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-750 transition-colors"
       >
         <div class="flex gap-4">
           <!-- Article Image -->
           <div class="flex-shrink-0 w-24 h-24">
-            <img 
+            <img
               v-if="article.article_image && article.article_image.length > 0"
-              :src="article.article_image[0].article_image_url" 
+              :src="article.article_image[0].article_image_url"
               :alt="article.article_name"
               class="w-full h-full object-cover rounded-md"
             />
-            <div 
-              v-else 
+            <div
+              v-else
               class="w-full h-full bg-gray-600 rounded-md flex items-center justify-center"
             >
-              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                class="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
             </div>
           </div>
@@ -54,11 +82,11 @@
                 {{ article.article_name }}
               </h3>
               <div class="flex items-center ml-2">
-                <span 
+                <span
                   class="px-2 py-1 text-xs rounded-full"
-                  :class="article.enable
-                    ? 'bg-green-900 text-green-300' 
-                    : 'bg-red-900 text-red-300'"
+                  :class="
+                    article.enable ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
+                  "
                 >
                   {{ article.enable ? 'Enabled' : 'Disabled' }}
                 </span>
@@ -66,28 +94,48 @@
             </div>
 
             <p class="text-gray-400 text-sm mb-3 line-clamp-2">
-              {{ article.article_text.substring(0, 120) }}{{ article.article_text.length > 120 ? '...' : '' }}
+              {{ article.article_text.substring(0, 120)
+              }}{{ article.article_text.length > 120 ? '...' : '' }}
             </p>
 
             <!-- Dates -->
             <div class="text-xs text-gray-500 mb-3 space-y-1">
               <div>Created: {{ formatDate(article.created_at) }}</div>
-              <div>Updated: {{ formatDate(article.updated_at || article.created_at) }}</div>
+              <div>
+                Last updated:
+                {{ article.updated_at ? formatDate(article.updated_at) : 'No updates yet' }}
+              </div>
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex gap-2">
+            <div class="flex justify-between items-center">
+              <div class="flex gap-2">
+                <button
+                  @click="viewArticle(article.id)"
+                  class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                >
+                  View Article
+                </button>
+                <button
+                  @click="editArticle(article.id)"
+                  class="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors"
+                >
+                  Edit Article
+                </button>
+              </div>
               <button
-                @click="viewArticle(article.id)"
-                class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                @click="deleteArticle(article.id)"
+                class="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors flex items-center gap-1"
               >
-                View Article
-              </button>
-              <button
-                @click="editArticle(article.id)"
-                class="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors"
-              >
-                Edit Article
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                Delete
               </button>
             </div>
           </div>
@@ -101,6 +149,8 @@
 import { computed, onMounted } from 'vue'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/supabaseAdminArticleStore'
 
+const emit = defineEmits(['create-article', 'view-article', 'edit-article', 'delete-article'])
+
 const articleStore = useSupabaseAdminArticleStore()
 
 const articles = computed(() => articleStore.getArticles)
@@ -113,18 +163,25 @@ const formatDate = (dateString) => {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
 const viewArticle = (articleId) => {
-  console.log("DEBUG::AdminArticleList", "View article:", articleId)
-  // TODO: Implement view article logic
+  console.log('DEBUG::AdminArticleList', 'View article:', articleId)
+  emit('view-article', articleId)
 }
 
 const editArticle = (articleId) => {
-  console.log("DEBUG::AdminArticleList", "Edit article:", articleId)
-  // TODO: Implement edit article logic
+  console.log('DEBUG::AdminArticleList', 'Edit article:', articleId)
+  emit('edit-article', articleId)
+}
+
+const deleteArticle = (articleId) => {
+  console.log('DEBUG::AdminArticleList', 'Delete article:', articleId)
+  if (confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
+    emit('delete-article', articleId)
+  }
 }
 
 onMounted(() => {
