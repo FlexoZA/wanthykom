@@ -34,10 +34,32 @@ A modern web application built with Vue 3, Vite, and Supabase.
   - Remember me and error handling
 
 - **Navigation System**
+
   - Sticky vertical navigation for books and chapters
   - Auto-expanding navigation based on current location
   - Responsive design (hidden on mobile)
   - Active state highlighting
+
+- **Media Manager System**
+
+  - Comprehensive image management with Supabase Storage integration
+  - Grid-based image display with responsive design
+  - Drag & drop upload with progress tracking
+  - Batch operations (select, delete, copy URLs)
+  - Real-time search and filtering
+  - Image preview modal with metadata display
+  - Storage analytics and file size management
+  - Custom confirmation dialogs for safe deletion
+  - Toast notifications for operation feedback
+  - Custom loading animations for better UX
+
+- **UI Component System**
+  - **ConfirmationDialog**: Reusable modal dialogs for user confirmations
+  - **NotificationToast**: Toast notification system with success/error/info types
+  - **LoadingAnimation**: Custom ripple loading animation component
+  - All components use Tailwind CSS with consistent dark theme
+  - Accessible design with proper focus management
+  - Auto-dismiss functionality and manual controls
 
 ## Project Structure
 
@@ -50,6 +72,14 @@ src/
 │   └── main.css          # Global styles
 ├── components/
 │   ├── admin/            # Admin-specific components
+│   │   ├── dialogs/
+│   │   │   └── ConfirmationDialog.vue  # Reusable confirmation modal
+│   │   ├── helpers/
+│   │   │   └── LoadingAnimation.vue    # Custom loading animation
+│   │   ├── media/
+│   │   │   └── MediaManager.vue        # Media management interface
+│   │   └── notification/
+│   │       └── NotificationToast.vue   # Toast notification system
 │   ├── article/
 │   │   └── ArticleList.vue    # Article display component
 │   ├── auth/
@@ -61,7 +91,6 @@ src/
 │   ├── header/
 │   │   └── TopHeader.vue      # Application header
 │   ├── helpers/
-│   │   └── NotificationToast.vue  # Toast notifications
 │   ├── icons/
 │   │   ├── IconCommunity.vue
 │   │   ├── IconDocumentation.vue
@@ -81,6 +110,7 @@ src/
 │   └── index.js            # Route configuration with layouts
 ├── stores/
 │   ├── admin/              # Admin-specific stores
+│   │   └── mediaManagerStore.js   # Media management state
 │   ├── authentication/
 │   │   └── authenticationStore.js  # Auth state management
 │   ├── supabase/           # Supabase-specific stores
@@ -89,7 +119,9 @@ src/
 │   └── unsplashImageStore.js       # Image service integration
 └── views/
     ├── admin/
-    │   └── AdminDashboard.vue      # Admin dashboard view
+    │   ├── AdminDashboard.vue      # Admin dashboard view
+    │   └── media/
+    │       └── MediaView.vue       # Media management view
     ├── auth/
     │   └── LoginView.vue           # Login page
     ├── BookView.vue                # Book reading interface
@@ -210,6 +242,224 @@ This system provides:
 - **Clean separation** between public and admin interfaces
 - **Consistent styling** within each layout type
 - **Easy maintenance** - layout changes affect all relevant pages
+
+## UI Component System
+
+The application features a comprehensive set of reusable UI components built with Vue 3 Composition API and Tailwind CSS. These components provide consistent user experience patterns throughout the application with proper accessibility and responsive design.
+
+### ConfirmationDialog Component
+
+A reusable modal dialog component for user confirmations, particularly useful for destructive actions like deletions.
+
+#### Features
+
+- **Tailwind CSS Styling**: Dark theme consistent with application design
+- **Customizable Content**: Configurable title, message, and button text
+- **Event-Driven**: Emits `confirm`, `cancel`, and `close` events
+- **Backdrop Control**: Optional backdrop clicking to close dialog
+- **Accessibility**: Proper focus management and keyboard navigation
+- **Warning Design**: Visual warning indicators for destructive actions
+
+#### Usage
+
+```vue
+<template>
+  <ConfirmationDialog
+    :show="showConfirmDialog"
+    title="Delete Image"
+    message="Are you sure you want to delete this image? This action cannot be undone."
+    confirm-text="Delete"
+    cancel-text="Cancel"
+    @confirm="handleConfirm"
+    @cancel="handleCancel"
+    @close="handleCancel"
+  />
+</template>
+
+<script setup>
+import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
+
+const showConfirmDialog = ref(false)
+
+const handleConfirm = () => {
+  // Execute the action
+  showConfirmDialog.value = false
+}
+
+const handleCancel = () => {
+  showConfirmDialog.value = false
+}
+</script>
+```
+
+#### Props
+
+- **`show`**: Boolean - Controls dialog visibility
+- **`title`**: String - Dialog title (default: "Confirm Action")
+- **`message`**: String - Confirmation message
+- **`confirmText`**: String - Confirm button text (default: "Confirm")
+- **`cancelText`**: String - Cancel button text (default: "Cancel")
+- **`allowBackdropClose`**: Boolean - Allow closing by clicking backdrop (default: true)
+
+### NotificationToast Component
+
+A comprehensive toast notification system for providing user feedback on operations with automatic dismissal and progress indicators.
+
+#### Features
+
+- **Multiple Types**: Success, error, and info notifications with appropriate icons
+- **Auto-Dismiss**: Configurable auto-dismiss duration with visual progress bar
+- **Manual Control**: Close button for immediate dismissal
+- **Smooth Animations**: Enter/exit transitions using Tailwind CSS
+- **Progress Indicator**: Visual countdown showing remaining display time
+- **Consistent Theming**: Dark theme matching application design
+- **Flexible Content**: Support for title and optional message
+
+#### Usage
+
+```vue
+<template>
+  <NotificationToast
+    :show="showToast"
+    :type="toast.type"
+    :title="toast.title"
+    :message="toast.message"
+    :duration="5000"
+    @close="hideToast"
+  />
+</template>
+
+<script setup>
+import NotificationToast from '@/components/admin/notification/NotificationToast.vue'
+
+const showToast = ref(false)
+const toast = ref({
+  type: 'success',
+  title: 'Operation Complete',
+  message: 'Your action was successful',
+})
+
+const showNotification = (type, title, message = '') => {
+  toast.value = { type, title, message }
+  showToast.value = true
+}
+
+const hideToast = () => {
+  showToast.value = false
+}
+
+// Usage examples
+showNotification('success', 'Upload Complete', '5 images uploaded successfully')
+showNotification('error', 'Upload Failed', 'Please check your connection')
+showNotification('info', 'Processing', 'Your request is being processed')
+</script>
+```
+
+#### Props
+
+- **`show`**: Boolean - Controls toast visibility
+- **`type`**: String - Toast type: 'success', 'error', 'info' (default: 'info')
+- **`title`**: String - Toast title (required)
+- **`message`**: String - Optional additional message
+- **`duration`**: Number - Auto-dismiss duration in milliseconds (default: 5000)
+- **`autoDismiss`**: Boolean - Enable auto-dismiss (default: true)
+
+#### Toast Types
+
+- **Success**: Green theme with checkmark icon for successful operations
+- **Error**: Red theme with warning icon for failed operations
+- **Info**: Blue theme with info icon for general notifications
+
+### LoadingAnimation Component
+
+A custom ripple loading animation that replaces generic spinners with a more visually appealing loading indicator.
+
+#### Features
+
+- **Ripple Effect**: Dual-ring ripple animation with staggered timing
+- **Custom Colors**: Uses application brand colors (pink and cyan)
+- **Responsive Size**: Configurable dimensions for different use cases
+- **Smooth Animation**: CSS-based animation with cubic-bezier easing
+- **Zero Dependencies**: Pure CSS animation without external libraries
+
+#### Usage
+
+```vue
+<template>
+  <div v-if="isLoading" class="flex items-center justify-center py-12">
+    <LoadingAnimation />
+  </div>
+</template>
+
+<script setup>
+import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
+
+const isLoading = ref(true)
+</script>
+```
+
+#### Animation Details
+
+- **Duration**: 1 second per cycle
+- **Easing**: Cubic-bezier(0, 0.2, 0.8, 1) for smooth acceleration
+- **Colors**: Primary ring (#e90c59), Secondary ring (#46dff0)
+- **Size**: 200px × 200px container with scalable content
+
+### Integration Examples
+
+#### MediaManager Integration
+
+The MediaManager component demonstrates comprehensive integration of all UI components:
+
+```vue
+<template>
+  <div>
+    <!-- Loading State -->
+    <div v-if="isLoading && images.length === 0">
+      <LoadingAnimation />
+    </div>
+
+    <!-- Content with action buttons -->
+    <button @click="deleteImage(imagePath)">Delete</button>
+
+    <!-- Confirmation Dialog -->
+    <ConfirmationDialog
+      :show="showConfirmDialog"
+      :title="confirmDialog.title"
+      :message="confirmDialog.message"
+      @confirm="handleConfirmAction"
+      @cancel="handleCancelAction"
+    />
+
+    <!-- Toast Notifications -->
+    <NotificationToast
+      :show="showToast"
+      :type="toast.type"
+      :title="toast.title"
+      :message="toast.message"
+      @close="hideToast"
+    />
+  </div>
+</template>
+```
+
+#### Component Communication Flow
+
+1. **User Action**: User clicks delete button
+2. **Confirmation**: ConfirmationDialog shown with specific message
+3. **Action Execution**: On confirm, operation executes
+4. **Feedback**: NotificationToast shows success/error result
+5. **State Reset**: Components return to initial state
+
+### Design Consistency
+
+All UI components follow consistent design principles:
+
+- **Dark Theme**: Gray-800/900 backgrounds with proper contrast
+- **Tailwind Classes**: Consistent spacing, typography, and color schemes
+- **Responsive Design**: Mobile-first approach with proper breakpoints
+- **Accessibility**: ARIA labels, keyboard navigation, and focus management
+- **Animation**: Smooth transitions using Tailwind's transition utilities
 
 ## Article System
 
@@ -857,6 +1107,293 @@ ArticleView
 - **Scalable Design**: Easy to add new features or modify existing ones
 
 This admin article management system provides a modern, efficient interface for content management while maintaining clean architecture principles and excellent user experience.
+
+## Media Manager System
+
+The application features a comprehensive media management system built with Supabase Storage integration, providing administrators with powerful tools to manage, organize, and deploy images across the application. The system offers a modern, responsive interface with drag-and-drop functionality and real-time storage analytics.
+
+### Features
+
+- **Supabase Storage Integration**: Direct integration with Supabase Storage buckets for reliable, scalable file management
+- **Grid-Based Interface**: Responsive image grid that adapts from 1-5 columns based on screen size
+- **Drag & Drop Upload**: Intuitive drag-and-drop interface with visual feedback and progress tracking
+- **Batch Operations**: Multi-select functionality for bulk actions (delete, copy URLs)
+- **Real-Time Search**: Instant filtering of images by filename with live results
+- **Image Preview Modal**: Full-size preview with detailed metadata and URL management
+- **Storage Analytics**: Real-time display of image count and total storage usage
+- **File Validation**: Automatic validation of file types and size limits (10MB max)
+- **Responsive Design**: Optimized experience across all device sizes
+- **Error Handling**: Comprehensive error handling with user-friendly feedback
+- **Loading States**: Visual feedback during all operations (upload, delete, fetch)
+
+### Architecture Overview
+
+The media manager uses a clean separation of concerns with Pinia state management:
+
+```
+MediaView (Route Container)
+└── MediaManager (Main Component)
+    ├── Image Grid Display
+    ├── Upload Modal
+    ├── Preview Modal
+    └── Batch Selection Actions
+
+MediaManagerStore (Pinia Store)
+├── Supabase Storage API Integration
+├── File Upload/Delete Operations
+├── URL Generation & Management
+└── State Management
+```
+
+### Database Structure
+
+The media manager works directly with Supabase Storage, requiring proper bucket configuration:
+
+```sql
+-- Supabase Storage Bucket Configuration
+Storage Bucket: 'articles'
+├── Public Access: Enabled for image display
+├── File Size Limit: 10MB per file
+├── Allowed Types: jpg, jpeg, png, gif, webp, svg
+└── RLS Policies: Configured for admin access
+```
+
+### Media Manager Store (`mediaManagerStore.js`)
+
+The store provides complete storage management with reactive state:
+
+```javascript
+import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
+
+// In your component
+const mediaStore = useMediaManagerStore()
+
+// Set storage bucket
+mediaStore.setBucket('articles')
+
+// Fetch images
+await mediaStore.fetchImages()
+
+// Upload single image
+const result = await mediaStore.uploadImage(file, 'uploads')
+
+// Upload multiple images
+const result = await mediaStore.uploadMultipleImages(files, 'gallery')
+
+// Delete image
+await mediaStore.deleteImage('path/to/image.jpg')
+
+// Access reactive state
+const images = computed(() => mediaStore.getImages)
+const isLoading = computed(() => mediaStore.getIsLoading)
+const uploadProgress = computed(() => mediaStore.getUploadProgress)
+```
+
+#### Store Methods
+
+- **`setBucket(bucketName)`**: Switch between different storage buckets
+- **`fetchImages(folder)`**: Retrieve images from specified folder
+- **`uploadImage(file, folder, fileName)`**: Upload single image with validation
+- **`uploadMultipleImages(files, folder)`**: Batch upload with progress tracking
+- **`deleteImage(imagePath)`**: Delete single image from storage
+- **`deleteMultipleImages(imagePaths)`**: Batch delete operations
+- **`getImageUrl(imagePath)`**: Generate public URLs for images
+- **`createSignedUrl(imagePath, expiresIn)`**: Create temporary access URLs
+- **`searchImages(searchTerm)`**: Filter images by filename
+- **`formatFileSize(bytes)`**: Human-readable file size formatting
+
+### Media Manager Component (`MediaManager.vue`)
+
+The main interface component with comprehensive functionality:
+
+```vue
+<template>
+  <div class="space-y-6">
+    <!-- Header with Storage Stats -->
+    <div class="flex items-center justify-end">
+      <div class="text-sm text-gray-400">
+        <span>{{ images.length }}</span> images •
+        <span>{{ mediaStore.formatFileSize(totalStorageSize) }}</span> used
+      </div>
+      <button @click="showUploadModal = true">Upload Images</button>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="flex items-center gap-4">
+      <input v-model="searchTerm" placeholder="Search images..." />
+      <button @click="refreshImages">Refresh</button>
+    </div>
+
+    <!-- Responsive Image Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div v-for="image in filteredImages" :key="image.path" class="group relative">
+        <!-- Selection Checkbox -->
+        <input type="checkbox" @change="toggleImageSelection(image.path)" />
+
+        <!-- Image Display -->
+        <img :src="image.url" @click="openImagePreview(image)" />
+
+        <!-- Hover Actions -->
+        <div class="opacity-0 group-hover:opacity-100">
+          <button @click="copyImageUrl(image)">Copy URL</button>
+          <button @click="deleteImage(image.path)">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Modal with Drag & Drop -->
+    <div v-if="showUploadModal" class="modal">
+      <div @drop="handleDrop" @dragover.prevent>
+        <p>Drag & drop images here or click to select</p>
+        <input type="file" multiple accept="image/*" @change="handleFileSelect" />
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+#### Component Features
+
+- **Responsive Grid**: Automatically adjusts column count based on screen size
+- **Drag & Drop**: Visual feedback during drag operations with file validation
+- **Multi-Selection**: Checkbox-based selection with batch operation toolbar
+- **Hover Actions**: Context-sensitive actions that appear on image hover
+- **Modal System**: Upload and preview modals with backdrop interaction
+- **Search Integration**: Real-time filtering with search term highlighting
+- **Loading States**: Skeleton loading and progress indicators
+
+### Storage Configuration
+
+#### Supabase Storage Setup
+
+```javascript
+// Required Supabase Storage Configuration
+
+1. Create Storage Bucket:
+   - Name: 'articles' (or your preferred bucket name)
+   - Public: true (for image display)
+
+2. Set RLS Policies:
+   - Allow authenticated users to upload
+   - Allow public read access for images
+   - Allow authenticated users to delete their uploads
+
+3. Configure CORS (if needed):
+   - Allow your domain for cross-origin requests
+```
+
+#### File Upload Validation
+
+```javascript
+// Built-in validation rules
+const validation = {
+  allowedTypes: [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+  ],
+  maxFileSize: 10 * 1024 * 1024, // 10MB
+  fileNaming: 'image_[timestamp].[extension]', // Automatic unique naming
+}
+```
+
+### Usage Examples
+
+#### Basic Integration
+
+```javascript
+// In a Vue component
+import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
+
+export default {
+  setup() {
+    const mediaStore = useMediaManagerStore()
+
+    // Initialize with specific bucket
+    onMounted(async () => {
+      mediaStore.setBucket('articles')
+      await mediaStore.fetchImages()
+    })
+
+    return { mediaStore }
+  },
+}
+```
+
+#### Upload with Progress Tracking
+
+```javascript
+const uploadFiles = async (files) => {
+  const result = await mediaStore.uploadMultipleImages(files, 'uploads')
+
+  if (result.success) {
+    console.log(`Uploaded ${result.successCount} files successfully`)
+  } else {
+    console.log(`${result.failureCount} files failed to upload`)
+  }
+}
+```
+
+#### Image URL Management
+
+```javascript
+// Get public URL
+const imageUrl = mediaStore.getImageUrl('uploads/image.jpg')
+
+// Create temporary signed URL
+const { signedUrl } = await mediaStore.createSignedUrl('private/image.jpg', 3600)
+```
+
+### Data Flow
+
+1. **Component Mount**: MediaManager component initializes and sets bucket
+2. **Image Fetching**: Store queries Supabase Storage for file list
+3. **URL Generation**: Public URLs are generated for each image
+4. **Grid Display**: Images are rendered in responsive grid layout
+5. **User Interactions**: Upload, delete, search operations update state
+6. **Real-Time Updates**: UI reflects changes immediately through reactive state
+
+### Performance Optimizations
+
+- **Lazy Loading**: Images load only when visible in viewport
+- **Batch Operations**: Multiple files processed efficiently in sequence
+- **Caching**: Public URLs are cached to prevent regeneration
+- **Debounced Search**: Search input is debounced for performance
+- **Progressive Loading**: Large image grids load progressively
+- **Memory Management**: Unused image references are cleaned up
+
+### Security Features
+
+- **File Type Validation**: Only image files are accepted
+- **Size Limits**: 10MB maximum file size prevents abuse
+- **RLS Integration**: Leverages Supabase Row Level Security
+- **Secure URLs**: Public URLs are generated securely through Supabase
+- **User Authentication**: All operations require valid admin authentication
+
+### Error Handling
+
+- **Network Errors**: Graceful handling of connection issues
+- **Upload Failures**: Individual file failures don't block batch operations
+- **Storage Limits**: Clear messaging when storage limits are reached
+- **File Validation**: User-friendly error messages for invalid files
+- **Permission Errors**: Proper feedback for authorization issues
+
+### Integration with Article System
+
+The media manager integrates seamlessly with the article management system:
+
+```javascript
+// Article form integration
+const selectImageFromMedia = async () => {
+  const selectedImage = await mediaStore.getImages.find((img) => img.selected)
+  articleForm.image_url = selectedImage.url
+}
+```
+
+This media manager system provides a professional-grade solution for content management, offering both power and simplicity for administrators while maintaining excellent performance and user experience.
 
 ## Book System
 

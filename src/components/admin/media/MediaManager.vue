@@ -100,17 +100,7 @@
 
     <!-- Loading State -->
     <div v-if="isLoading && images.length === 0" class="flex items-center justify-center py-12">
-      <div class="flex items-center gap-3 text-gray-400">
-        <svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          ></path>
-        </svg>
-        Loading images...
-      </div>
+      <LoadingAnimation />
     </div>
 
     <!-- Empty State -->
@@ -409,12 +399,37 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Dialog -->
+    <ConfirmationDialog
+      :show="showConfirmDialog"
+      :title="confirmDialog.title"
+      :message="confirmDialog.message"
+      :confirm-text="confirmDialog.confirmText"
+      :cancel-text="confirmDialog.cancelText"
+      @confirm="handleConfirmAction"
+      @cancel="handleCancelAction"
+      @close="handleCancelAction"
+    />
+
+    <!-- Notification Toast -->
+    <NotificationToast
+      :show="showToast"
+      :type="toast.type"
+      :title="toast.title"
+      :message="toast.message"
+      :duration="toast.duration"
+      @close="hideToast"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
+import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
+import NotificationToast from '@/components/admin/notification/NotificationToast.vue'
+import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 
 console.log('DEBUG::MediaManager', 'Component initializing')
 
@@ -427,6 +442,26 @@ const selectedImages = ref([])
 const showUploadModal = ref(false)
 const previewImage = ref(null)
 const isDragging = ref(false)
+
+// Confirmation dialog state
+const showConfirmDialog = ref(false)
+const confirmDialog = ref({
+  title: '',
+  message: '',
+  confirmText: 'Confirm',
+  cancelText: 'Cancel',
+  action: null,
+  data: null,
+})
+
+// Toast notification state
+const showToast = ref(false)
+const toast = ref({
+  type: 'info',
+  title: '',
+  message: '',
+  duration: 5000,
+})
 
 // Computed properties
 const images = computed(() => mediaStore.getImages)
@@ -461,10 +496,11 @@ const copyImageUrl = async (image) => {
   console.log('DEBUG::MediaManager', `Copying URL for: ${image.name}`)
   try {
     await navigator.clipboard.writeText(image.url)
-    // TODO: Add toast notification
     console.log('DEBUG::MediaManager', 'URL copied to clipboard')
+    showToastNotification('success', 'URL copied', 'Image URL copied to clipboard')
   } catch (err) {
     console.error('DEBUG::MediaManager', 'Failed to copy URL:', err)
+    showToastNotification('error', 'Copy failed', 'Failed to copy URL to clipboard')
   }
 }
 
@@ -480,40 +516,42 @@ const copySelectedUrls = async () => {
   try {
     await navigator.clipboard.writeText(urls.join('\n'))
     console.log('DEBUG::MediaManager', 'URLs copied to clipboard')
+    showToastNotification('success', 'URLs copied', `${urls.length} image URLs copied to clipboard`)
     selectedImages.value = []
   } catch (err) {
     console.error('DEBUG::MediaManager', 'Failed to copy URLs:', err)
+    showToastNotification('error', 'Copy failed', 'Failed to copy URLs to clipboard')
   }
 }
 
 const deleteImage = async (imagePath) => {
   console.log('DEBUG::MediaManager', `Deleting image: ${imagePath}`)
-  if (confirm('Are you sure you want to delete this image? This action cannot be undone.')) {
-    const result = await mediaStore.deleteImage(imagePath)
-    if (result.success) {
-      console.log('DEBUG::MediaManager', 'Image deleted successfully')
-      // Remove from selection if selected
-      const index = selectedImages.value.indexOf(imagePath)
-      if (index > -1) {
-        selectedImages.value.splice(index, 1)
-      }
-    }
+  const image = images.value.find((img) => img.path === imagePath)
+  const imageName = image ? image.name : 'this image'
+
+  confirmDialog.value = {
+    title: 'Delete Image',
+    message: `Are you sure you want to delete "${imageName}"? This action cannot be undone.`,
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+    action: 'deleteImage',
+    data: imagePath,
   }
+  showConfirmDialog.value = true
 }
 
 const deleteSelectedImages = async () => {
   console.log('DEBUG::MediaManager', `Deleting ${selectedImages.value.length} selected images`)
-  if (
-    confirm(
-      `Are you sure you want to delete ${selectedImages.value.length} images? This action cannot be undone.`,
-    )
-  ) {
-    const result = await mediaStore.deleteMultipleImages(selectedImages.value)
-    if (result.success) {
-      console.log('DEBUG::MediaManager', 'Selected images deleted successfully')
-      selectedImages.value = []
-    }
+
+  confirmDialog.value = {
+    title: 'Delete Multiple Images',
+    message: `Are you sure you want to delete ${selectedImages.value.length} images? This action cannot be undone.`,
+    confirmText: 'Delete All',
+    cancelText: 'Cancel',
+    action: 'deleteSelectedImages',
+    data: [...selectedImages.value],
   }
+  showConfirmDialog.value = true
 }
 
 const handleFileSelect = (event) => {
@@ -541,11 +579,29 @@ const uploadFiles = async (files) => {
   if (result.success) {
     console.log('DEBUG::MediaManager', 'All files uploaded successfully')
     closeUploadModal()
+    showToastNotification(
+      'success',
+      'Upload complete',
+      `${files.length} images uploaded successfully`,
+    )
   } else {
     console.log(
       'DEBUG::MediaManager',
       `Upload completed with ${result.successCount} success, ${result.failureCount} failures`,
     )
+    const successCount = result.successCount || 0
+    const failureCount = result.failureCount || 0
+
+    if (successCount > 0) {
+      closeUploadModal()
+      showToastNotification(
+        'error',
+        'Partial upload',
+        `${successCount} images uploaded, ${failureCount} failed`,
+      )
+    } else {
+      showToastNotification('error', 'Upload failed', result.error || 'Failed to upload images')
+    }
   }
 }
 
@@ -575,6 +631,89 @@ const onImageError = (image) => {
 
 const onImageLoad = (image) => {
   console.log('DEBUG::MediaManager', `Successfully loaded image: ${image.name}`)
+}
+
+// Confirmation dialog handlers
+const handleConfirmAction = async () => {
+  console.log('DEBUG::MediaManager', `Executing confirmed action: ${confirmDialog.value.action}`)
+  showConfirmDialog.value = false
+
+  if (confirmDialog.value.action === 'deleteImage') {
+    const result = await mediaStore.deleteImage(confirmDialog.value.data)
+    if (result.success) {
+      console.log('DEBUG::MediaManager', 'Image deleted successfully')
+      // Remove from selection if selected
+      const index = selectedImages.value.indexOf(confirmDialog.value.data)
+      if (index > -1) {
+        selectedImages.value.splice(index, 1)
+      }
+      showToastNotification('success', 'Image deleted', 'Image has been successfully deleted')
+    } else {
+      showToastNotification('error', 'Delete failed', result.error || 'Failed to delete image')
+    }
+  } else if (confirmDialog.value.action === 'deleteSelectedImages') {
+    const result = await mediaStore.deleteMultipleImages(confirmDialog.value.data)
+    if (result.success) {
+      console.log('DEBUG::MediaManager', 'Selected images deleted successfully')
+      selectedImages.value = []
+      showToastNotification(
+        'success',
+        'Images deleted',
+        `${confirmDialog.value.data.length} images have been successfully deleted`,
+      )
+    } else {
+      const successCount = result.successCount || 0
+      const failureCount = result.failureCount || 0
+      if (successCount > 0) {
+        showToastNotification(
+          'error',
+          'Partial deletion',
+          `${successCount} images deleted, ${failureCount} failed`,
+        )
+      } else {
+        showToastNotification('error', 'Delete failed', result.error || 'Failed to delete images')
+      }
+    }
+  }
+
+  // Reset dialog
+  confirmDialog.value = {
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    action: null,
+    data: null,
+  }
+}
+
+const handleCancelAction = () => {
+  console.log('DEBUG::MediaManager', 'Cancelled confirmation dialog')
+  showConfirmDialog.value = false
+  confirmDialog.value = {
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    action: null,
+    data: null,
+  }
+}
+
+// Toast notification helpers
+const showToastNotification = (type, title, message = '', duration = 5000) => {
+  console.log('DEBUG::MediaManager', `Showing ${type} toast: ${title}`)
+  toast.value = {
+    type,
+    title,
+    message,
+    duration,
+  }
+  showToast.value = true
+}
+
+const hideToast = () => {
+  showToast.value = false
 }
 
 // Drag and drop handlers

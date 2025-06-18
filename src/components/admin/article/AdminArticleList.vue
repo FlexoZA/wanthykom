@@ -20,7 +20,7 @@
 
     <!-- Loading State -->
     <div v-if="isLoading" class="text-gray-400 text-center py-8">
-      <div class="animate-pulse">Loading articles...</div>
+      <LoadingAnimation />
     </div>
 
     <!-- Error State -->
@@ -148,6 +148,7 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/supabaseAdminArticleStore'
+import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 
 const emit = defineEmits(['create-article', 'view-article', 'edit-article', 'delete-article'])
 

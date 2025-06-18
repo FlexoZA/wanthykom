@@ -36,8 +36,8 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="isLoading" class="text-gray-400 text-center py-8">
-      <div class="animate-pulse">Loading article...</div>
+    <div v-if="isLoading" class="flex items-center justify-center py-12">
+      <LoadingAnimation />
     </div>
 
     <!-- Error State -->
@@ -95,6 +95,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/supabaseAdminArticleStore'
+import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 
 const props = defineProps({
   articleId: {

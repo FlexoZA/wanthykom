@@ -1,6 +1,8 @@
 <template>
   <div class="space-y-8">
-    <div v-if="isLoading" class="text-gray-400">Loading articles...</div>
+    <div v-if="isLoading" class="flex items-center justify-center py-12">
+      <LoadingAnimation />
+    </div>
     <div v-else-if="error" class="text-red-400">Error: {{ error }}</div>
     <div v-else>
       <div v-for="article in articles" :key="article.id">
@@ -26,6 +28,7 @@
 <script setup>
 import { onMounted, computed } from 'vue'
 import { useSupabaseArticleStore } from '@/stores/supabaseArticleStore'
+import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 
 const articleStore = useSupabaseArticleStore()
 
