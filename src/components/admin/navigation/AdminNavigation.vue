@@ -24,6 +24,15 @@
             Articles
           </RouterLink>
         </li>
+        <li>
+          <RouterLink
+            to="/admin/media-manager"
+            class="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
+            active-class="bg-gray-700 text-white"
+          >
+            Media Manager
+          </RouterLink>
+        </li>
       </ul>
     </nav>
     <div class="absolute bottom-0 w-full p-4">
@@ -39,7 +48,14 @@
           fill="none"
           viewBox="0 0 24 24"
         >
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
           <path
             class="opacity-75"
             fill="currentColor"
@@ -66,7 +82,7 @@ const handleLogout = async () => {
     isLoggingOut.value = true
     console.log('DEBUG::AdminNavigation', 'Logging out')
     const { error } = await authStore.signOut()
-    
+
     if (error) {
       console.error('DEBUG::AdminNavigation', 'Logout failed:', error.message)
       // TODO: Show error message to user
@@ -81,4 +97,4 @@ const handleLogout = async () => {
     isLoggingOut.value = false
   }
 }
-</script> 
+</script>

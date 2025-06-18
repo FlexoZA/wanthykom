@@ -48,6 +48,15 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+    {
+      path: '/admin/media-manager',
+      name: 'admin-media-manager',
+      component: () => import('@/views/admin/media/MediaManagerView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
   ],
 })
 

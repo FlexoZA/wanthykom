@@ -7,3 +7,20 @@
     <RouterView />
   </component>
 </template>
+
+<style>
+/* Global cursor styles */
+button,
+[role='button'],
+a,
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Disabled state */
+button:disabled,
+[role='button']:disabled,
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+</style>
