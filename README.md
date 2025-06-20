@@ -67,65 +67,79 @@ A modern web application built with Vue 3, Vite, and Supabase.
 src/
 ├── App.vue
 ├── assets/
-│   ├── images/           # Image assets
 │   ├── logo.svg          # Application logo
 │   └── main.css          # Global styles
 ├── components/
 │   ├── admin/            # Admin-specific components
+│   │   ├── article/
+│   │   │   ├── AddArticle.vue          # Article creation/editing form
+│   │   │   ├── AdminArticleList.vue    # Admin article list view
+│   │   │   ├── ArticleView.vue         # Single article view
+│   │   │   └── UpdateArticle.vue       # Article update wrapper
 │   │   ├── dialogs/
 │   │   │   └── ConfirmationDialog.vue  # Reusable confirmation modal
 │   │   ├── helpers/
 │   │   │   └── LoadingAnimation.vue    # Custom loading animation
 │   │   ├── media/
 │   │   │   └── MediaManager.vue        # Media management interface
+│   │   ├── navigation/
+│   │   │   └── AdminNavigation.vue     # Admin panel navigation
 │   │   └── notification/
 │   │       └── NotificationToast.vue   # Toast notification system
-│   ├── article/
-│   │   └── ArticleList.vue    # Article display component
 │   ├── auth/
-│   │   └── LoginDialog.vue    # Login dialog component
-│   ├── book/
-│   │   └── BookList.vue       # Book display with chapters
-│   ├── footer/
-│   │   └── AppFooter.vue      # Application footer
-│   ├── header/
-│   │   └── TopHeader.vue      # Application header
-│   ├── helpers/
+│   │   └── LoginDialog.vue             # Login dialog component
 │   ├── icons/
 │   │   ├── IconCommunity.vue
 │   │   ├── IconDocumentation.vue
 │   │   ├── IconEcosystem.vue
 │   │   ├── IconSupport.vue
 │   │   └── IconTooling.vue
-│   ├── MainContent.vue       # Main content wrapper
-│   └── navigation/
-│       └── VerticalNav.vue   # Vertical navigation component
+│   ├── web/                # Public-facing web components
+│   │   ├── article/
+│   │   │   └── ArticleList.vue         # Public article display
+│   │   ├── book/
+│   │   │   └── BookList.vue            # Book display with chapters
+│   │   ├── footer/
+│   │   │   └── AppFooter.vue           # Application footer
+│   │   ├── header/
+│   │   │   └── TopHeader.vue           # Application header
+│   │   ├── helpers/
+│   │   │   └── NotificationToast.vue   # Web notification toast
+│   │   └── navigation/
+│   │       └── VerticalNav.vue         # Vertical navigation component
+│   └── MainContent.vue                 # Main content wrapper
 ├── layouts/
-│   ├── AdminLayout.vue       # Admin panel layout
-│   └── DefaultLayout.vue     # Default public layout
+│   ├── AdminLayout.vue                 # Admin panel layout
+│   └── DefaultLayout.vue               # Default public layout
 ├── lib/
-│   └── supabase.js          # Supabase client configuration
-├── main.js                  # Application entry point
+│   └── supabase.js                     # Supabase client configuration
+├── main.js                             # Application entry point
 ├── router/
-│   └── index.js            # Route configuration with layouts
+│   └── index.js                        # Route configuration with layouts
 ├── stores/
-│   ├── admin/              # Admin-specific stores
-│   │   └── mediaManagerStore.js   # Media management state
+│   ├── admin/                          # Admin-specific stores
+│   │   ├── mediaManagerStore.js        # Media management state
+│   │   └── supabaseAdminArticleStore.js # Admin article management
 │   ├── authentication/
-│   │   └── authenticationStore.js  # Auth state management
-│   ├── supabase/           # Supabase-specific stores
-│   ├── supabaseArticleStore.js     # Article data management
-│   ├── supabaseBookStore.js        # Book data management
-│   └── unsplashImageStore.js       # Image service integration
+│   │   └── authenticationStore.js      # Auth state management
+│   └── web/                            # Public web stores
+│       ├── supabaseArticleStore.js     # Public article data management
+│       ├── supabaseBookStore.js        # Book data management
+│       └── unsplashImageStore.js       # Image service integration
+├── utils/
+│   └── validation.js                   # Form validation utilities
 └── views/
     ├── admin/
-    │   ├── AdminDashboard.vue      # Admin dashboard view
+    │   ├── AdminDashboard.vue          # Admin dashboard view
+    │   ├── article/
+    │   │   └── ArticlesView.vue        # Admin articles management
     │   └── media/
-    │       └── MediaView.vue       # Media management view
+    │       └── MediaManagerView.vue    # Media management view
     ├── auth/
-    │   └── LoginView.vue           # Login page
-    ├── BookView.vue                # Book reading interface
-    └── HomeView.vue                # Home page with articles
+    │   └── LoginView.vue               # Login page
+    └── web/                            # Public web views
+        ├── BookView.vue                # Book reading interface
+        └── HomeView.vue                # Home page with articles
 ```
 
 ## Layout System
