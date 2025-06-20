@@ -27,7 +27,7 @@
 
 <script setup>
 import { onMounted, computed } from 'vue'
-import { useSupabaseArticleStore } from '@/stores/supabaseArticleStore'
+import { useSupabaseArticleStore } from '@/stores/web/supabaseArticleStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 
 const articleStore = useSupabaseArticleStore()

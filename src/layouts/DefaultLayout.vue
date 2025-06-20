@@ -20,8 +20,8 @@
 </template>
 
 <script setup>
-import TopHeader from '@/components/header/TopHeader.vue'
-import VerticalNav from '@/components/navigation/VerticalNav.vue'
+import TopHeader from '@/components/web/header/TopHeader.vue'
+import VerticalNav from '@/components/web/navigation/VerticalNav.vue'
 import MainContent from '@/components/MainContent.vue'
-import AppFooter from '@/components/footer/AppFooter.vue'
-</script> 
+import AppFooter from '@/components/web/footer/AppFooter.vue'
+</script>

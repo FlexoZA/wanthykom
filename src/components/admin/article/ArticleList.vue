@@ -18,6 +18,18 @@
       </button>
     </div>
 
+    <!-- Confirmation Dialog -->
+    <ConfirmationDialog
+      :show="showDeleteDialog"
+      :title="`Delete Article: ${articleToDelete?.article_name}`"
+      :message="`Are you sure you want to delete '${articleToDelete?.article_name}'? This action cannot be undone.`"
+      confirm-text="Delete Article"
+      cancel-text="Cancel"
+      @confirm="confirmDelete"
+      @cancel="cancelDelete"
+      @close="cancelDelete"
+    />
+
     <!-- Loading State -->
     <div v-if="isLoading" class="text-gray-400 text-center py-8">
       <LoadingAnimation />
@@ -125,9 +137,10 @@
               </div>
               <button
                 @click="deleteArticle(article.id)"
-                class="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors flex items-center gap-1"
+                class="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                title="Delete article"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -135,7 +148,6 @@
                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"
                   />
                 </svg>
-                Delete
               </button>
             </div>
           </div>
@@ -146,11 +158,16 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
-import { useSupabaseAdminArticleStore } from '@/stores/admin/supabaseAdminArticleStore'
+import { computed, onMounted, ref } from 'vue'
+import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
+import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
 
 const emit = defineEmits(['create-article', 'view-article', 'edit-article', 'delete-article'])
+
+// Dialog state
+const showDeleteDialog = ref(false)
+const articleToDelete = ref(null)
 
 const articleStore = useSupabaseAdminArticleStore()
 
@@ -180,9 +197,23 @@ const editArticle = (articleId) => {
 
 const deleteArticle = (articleId) => {
   console.log('DEBUG::AdminArticleList', 'Delete article:', articleId)
-  if (confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
-    emit('delete-article', articleId)
+  const article = articles.value.find(a => a.id === articleId)
+  articleToDelete.value = article
+  showDeleteDialog.value = true
+}
+
+const confirmDelete = () => {
+  console.log('DEBUG::AdminArticleList', 'Confirmed delete for article:', articleToDelete.value?.id)
+  if (articleToDelete.value) {
+    emit('delete-article', articleToDelete.value.id)
   }
+  cancelDelete()
+}
+
+const cancelDelete = () => {
+  console.log('DEBUG::AdminArticleList', 'Cancelled delete')
+  showDeleteDialog.value = false
+  articleToDelete.value = null
 }
 
 onMounted(() => {

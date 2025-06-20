@@ -12,7 +12,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('@/views/HomeView.vue'),
+      component: () => import('@/views/web/HomeView.vue'),
       meta: {
         layout: 'default',
       },
@@ -20,7 +20,7 @@ const router = createRouter({
     {
       path: '/books',
       name: 'books',
-      component: () => import('../views/BookView.vue'),
+      component: () => import('@/views/web/BookView.vue'),
       meta: {
         layout: 'default',
       },
@@ -43,6 +43,15 @@ const router = createRouter({
       path: '/admin/articles',
       name: 'admin-articles',
       component: () => import('@/views/admin/article/ArticlesView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/books',
+      name: 'admin-books',
+      component: () => import('@/views/admin/book/BooksView.vue'),
       meta: {
         layout: 'admin',
         requiresAuth: true,

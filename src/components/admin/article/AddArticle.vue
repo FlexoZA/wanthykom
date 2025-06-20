@@ -81,7 +81,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useSupabaseAdminArticleStore } from '@/stores/admin/supabaseAdminArticleStore'
+import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 
 const props = defineProps({
   article: {

@@ -21,7 +21,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import { useUnsplashImageStore } from '@/stores/unsplashImageStore'
+import { useUnsplashImageStore } from '@/stores/web/unsplashImageStore'
 
 const imageStore = useUnsplashImageStore()
 

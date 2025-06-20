@@ -15,7 +15,7 @@
     <div v-for="book in books" :key="book.book_name" class="mb-4">
       <div class="flex flex-col">
         <!-- Book Link -->
-        <div 
+        <div
           class="flex items-center justify-between py-2 px-3 rounded hover:bg-gray-700 transition-colors cursor-pointer"
           :class="{ 'bg-gray-700': isBookActive(book.book_name) }"
           @click="toggleBook(book.book_name)"
@@ -33,8 +33,8 @@
         </div>
 
         <!-- Chapter Links -->
-        <div 
-          v-if="expandedBooks[book.book_name] && book.chapter" 
+        <div
+          v-if="expandedBooks[book.book_name] && book.chapter"
           class="ml-4 mt-2 space-y-1"
         >
           <RouterLink
@@ -55,7 +55,7 @@
 <script setup>
 import { RouterLink, useRoute } from 'vue-router'
 import { computed, onMounted, ref, watch } from 'vue'
-import { useSupabaseBookStore } from '@/stores/supabaseBookStore'
+import { useSupabaseBookStore } from '@/stores/web/supabaseBookStore'
 
 const route = useRoute()
 const bookStore = useSupabaseBookStore()
@@ -67,8 +67,8 @@ const isBookActive = (bookName) => {
 }
 
 const isChapterActive = (bookName, chapterName) => {
-  return route.name === 'books' && 
-         route.query.book === bookName && 
+  return route.name === 'books' &&
+         route.query.book === bookName &&
          route.query.chapter === chapterName
 }
 

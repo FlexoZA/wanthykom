@@ -42,7 +42,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import { useSupabaseAdminArticleStore } from '@/stores/admin/supabaseAdminArticleStore'
+import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import AddArticle from '@/components/admin/article/AddArticle.vue'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 

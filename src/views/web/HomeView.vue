@@ -5,5 +5,5 @@
 </template>
 
 <script setup>
-import ArticleList from '@/components/article/ArticleList.vue'
+import ArticleList from '@/components/web/article/ArticleList.vue'
 </script>
