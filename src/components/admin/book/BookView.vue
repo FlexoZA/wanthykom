@@ -47,9 +47,9 @@
     <!-- Book Content -->
     <div v-else-if="book" class="bg-gray-800 rounded-lg p-6">
       <!-- Book Cover Image -->
-      <div v-if="book.book_image && book.book_image.length > 0" class="mb-6">
+      <div v-if="book.book_image_url" class="mb-6">
         <img
-          :src="book.book_image[0].book_image_url"
+          :src="book.book_image_url"
           :alt="book.book_name"
           class="w-full h-64 object-cover rounded-lg"
         />

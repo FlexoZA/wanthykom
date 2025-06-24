@@ -62,8 +62,8 @@
           <!-- Book Image -->
           <div class="flex-shrink-0 w-24 h-24">
             <img
-              v-if="book.book_image && book.book_image.length > 0"
-              :src="book.book_image[0].book_image_url"
+              v-if="book.book_image_url"
+              :src="book.book_image_url"
               :alt="book.book_name"
               class="w-full h-full object-cover rounded-md"
             />

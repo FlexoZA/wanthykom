@@ -62,8 +62,8 @@
           <!-- Article Image -->
           <div class="flex-shrink-0 w-24 h-24">
             <img
-              v-if="article.article_image && article.article_image.length > 0"
-              :src="article.article_image[0].article_image_url"
+              v-if="article.article_image_url"
+              :src="article.article_image_url"
               :alt="article.article_name"
               class="w-full h-full object-cover rounded-md"
             />

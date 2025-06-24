@@ -31,6 +31,7 @@ export const useSupabaseBookStore = defineStore('supabaseBook', {
           .select(
             `
             book_name,
+            book_image_url,
             book_header (
               book_header_name,
               book_header_text
@@ -41,9 +42,6 @@ export const useSupabaseBookStore = defineStore('supabaseBook', {
                 chapter_image (
                     chapter_image_url
                 )
-            ),
-            book_image (
-                book_image_url
             )
           `,
           )

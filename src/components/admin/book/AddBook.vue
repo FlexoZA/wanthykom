@@ -56,15 +56,15 @@
           <!-- Image Dropdown -->
           <div class="flex-1">
             <select
-              v-model="formData.book_image_id"
+              v-model="formData.book_image_url"
               @change="updateSelectedImage"
               class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
             >
               <option value="">Select an image</option>
               <option
                 v-for="image in availableImages"
-                :key="image.id"
-                :value="image.id"
+                :key="image.url"
+                :value="image.url"
               >
                 {{ image.name }}
               </option>
@@ -155,7 +155,7 @@ const isSubmitting = ref(false)
 
 const formData = ref({
   enable: false,
-  book_image_id: '',
+  book_image_url: '',
   book_name: '',
 })
 
@@ -166,16 +166,16 @@ const availableImages = computed(() => mediaStore.getImages)
 
 // Get selected image details for thumbnail
 const selectedImage = computed(() => {
-  if (!formData.value.book_image_id) return null
-  return availableImages.value.find(img => img.id === formData.value.book_image_id)
+  if (!formData.value.book_image_url) return null
+  return availableImages.value.find(img => img.url === formData.value.book_image_url)
 })
 
-const selectedImageUrl = computed(() => selectedImage.value?.url || '')
+const selectedImageUrl = computed(() => formData.value.book_image_url || '')
 const selectedImageName = computed(() => selectedImage.value?.name || '')
 
 // Update selected image when dropdown changes
 const updateSelectedImage = () => {
-  console.log('DEBUG::AddBook', 'Selected image ID:', formData.value.book_image_id)
+  console.log('DEBUG::AddBook', 'Selected image URL:', formData.value.book_image_url)
   console.log('DEBUG::AddBook', 'Selected image details:', selectedImage.value)
 }
 
@@ -201,7 +201,7 @@ const handleSubmit = async () => {
     // Reset form
     formData.value = {
       enable: false,
-      book_image_id: '',
+      book_image_url: '',
       book_name: '',
     }
   } catch (error) {
@@ -214,7 +214,8 @@ const handleSubmit = async () => {
 
 // Load book data for editing
 onMounted(async () => {
-  // Load images from media manager
+  // Set the correct bucket and load images from media manager
+  mediaStore.setBucket('articles')
   await mediaStore.fetchImages()
 
   if (props.bookId) {
@@ -224,7 +225,7 @@ onMounted(async () => {
       if (book) {
         formData.value = {
           enable: book.enable || false,
-          book_image_id: book.book_image?.[0]?.id || '',
+          book_image_url: book.book_image_url || '',
           book_name: book.book_name || '',
         }
         console.log('DEBUG::AddBook', 'Book data loaded:', formData.value)

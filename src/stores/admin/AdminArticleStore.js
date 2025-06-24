@@ -20,13 +20,10 @@ export const useSupabaseAdminArticleStore = defineStore('supabaseAdminArticle', 
           id,
           article_name,
           article_text,
+          article_image_url,
           created_at,
           updated_at,
-          enable,
-          article_image (
-            id,
-            article_image_url
-          )
+          enable
         `,
         )
         .order('created_at', { ascending: false })
@@ -61,8 +58,8 @@ export const useSupabaseAdminArticleStore = defineStore('supabaseAdminArticle', 
           {
             article_name: articleData.article_name,
             article_text: articleData.article_text,
+            article_image_url: articleData.article_image_url || null,
             enable: articleData.enable,
-            // We'll handle article_image_id later when we implement image selection
           },
         ])
         .select()
@@ -97,13 +94,10 @@ export const useSupabaseAdminArticleStore = defineStore('supabaseAdminArticle', 
           id,
           article_name,
           article_text,
+          article_image_url,
           created_at,
           updated_at,
-          enable,
-          article_image (
-            id,
-            article_image_url
-          )
+          enable
         `,
         )
         .eq('id', articleId)
@@ -136,6 +130,7 @@ export const useSupabaseAdminArticleStore = defineStore('supabaseAdminArticle', 
       const updatePayload = {
         article_name: articleData.article_name,
         article_text: articleData.article_text,
+        article_image_url: articleData.article_image_url || null,
         enable: articleData.enable,
         updated_at: new Date().toISOString(),
       }

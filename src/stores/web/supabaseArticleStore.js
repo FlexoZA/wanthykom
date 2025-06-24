@@ -26,9 +26,7 @@ export const useSupabaseArticleStore = defineStore('supabaseArticle', {
             `
             article_name,
             article_text,
-            article_image (
-              article_image_url
-            )
+            article_image_url
           `,
           )
           .order('created_at', { ascending: false })

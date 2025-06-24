@@ -7,11 +7,11 @@
         <div class="mb-12">
           <!-- Book Title -->
           <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ selectedBook.book_name }}</h2>
-          
+
           <!-- Book Image -->
-          <div v-if="selectedBook.book_image && selectedBook.book_image.length > 0" class="mb-6">
+          <div v-if="selectedBook.book_image_url" class="mb-6">
             <img
-              :src="selectedBook.book_image[0].book_image_url"
+              :src="selectedBook.book_image_url"
               :alt="selectedBook.book_name"
               class="w-full h-80 object-cover rounded-lg"
             />
@@ -27,14 +27,14 @@
 
           <!-- Chapters -->
           <div v-if="selectedBook.chapter && selectedBook.chapter.length > 0" class="space-y-8">
-            <div 
-              v-for="chapter in selectedBook.chapter" 
-              :key="chapter.chapter_name" 
+            <div
+              v-for="chapter in selectedBook.chapter"
+              :key="chapter.chapter_name"
               class="border-t border-gray-700 pt-6"
               :ref="el => { if (el) chapterRefs[chapter.chapter_name] = el }"
             >
               <h3 class="text-xl font-semibold text-gray-200 mb-4">{{ chapter.chapter_name }}</h3>
-              
+
               <!-- Chapter Image -->
               <div v-if="chapter.chapter_image && chapter.chapter_image.length > 0" class="mb-4">
                 <img
@@ -54,30 +54,30 @@
       </div>
     </div>
   </template>
-  
+
   <script setup>
   import { onMounted, computed, watch, ref } from 'vue'
   import { useRoute } from 'vue-router'
-  import { useSupabaseBookStore } from '@/stores/supabaseBookStore'
-  
+  import { useSupabaseBookStore } from '@/stores/web/supabaseBookStore'
+
   const route = useRoute()
   const bookStore = useSupabaseBookStore()
   const chapterRefs = ref({})
-  
+
   const books = computed(() => bookStore.getBooks)
   const selectedBook = computed(() => bookStore.getSelectedBook)
   const isLoading = computed(() => bookStore.getIsLoading)
   const error = computed(() => bookStore.getError)
-  
+
   const scrollToChapter = (chapterName) => {
     if (chapterRefs.value[chapterName]) {
-      chapterRefs.value[chapterName].scrollIntoView({ 
+      chapterRefs.value[chapterName].scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       })
     }
   }
-  
+
   // Watch for route changes to scroll to the correct chapter
   watch(() => route.query.chapter, (newChapter) => {
     if (newChapter) {
@@ -87,7 +87,7 @@
       }, 100)
     }
   }, { immediate: true })
-  
+
   // Watch for route changes to select the correct book
   watch(() => route.query.book, (newBookName) => {
     if (newBookName && books.value) {
@@ -97,7 +97,7 @@
       }
     }
   }, { immediate: true })
-  
+
   onMounted(async () => {
     await bookStore.fetchBooks()
     // If there's a book in the URL query, select it
@@ -109,4 +109,3 @@
     }
   })
   </script>
-  

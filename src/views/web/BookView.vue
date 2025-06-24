@@ -3,8 +3,7 @@
       <BookList />
     </div>
   </template>
-  
+
   <script setup>
-    import BookList from '@/components/book/BookList.vue';
+    import BookList from '@/components/web/book/BookList.vue';
   </script>
-  

@@ -19,12 +19,9 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
           `
           id,
           book_name,
+          book_image_url,
           created_at,
           enable,
-          book_image (
-            id,
-            book_image_url
-          ),
           book_header (
             id,
             book_header_name,
@@ -68,23 +65,27 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
       error.value = null
       console.log('DEBUG::supabaseAdminBookStore', 'Creating book:', bookData)
 
-      const { data, error: createError } = await supabase
+      const { data: bookResult, error: createError } = await supabase
         .from('book')
         .insert([
           {
             book_name: bookData.book_name,
+            enable: bookData.enable || false,
+            book_image_url: bookData.book_image_url || null,
           },
         ])
         .select()
+        .single()
 
       if (createError) {
         throw createError
       }
 
+      console.log('DEBUG::supabaseAdminBookStore', 'Book created successfully:', bookResult)
+
       // Refresh the books list
       await fetchBooks()
-      console.log('DEBUG::supabaseAdminBookStore', 'Book created successfully', data)
-      return data
+      return bookResult
     } catch (err) {
       console.error('DEBUG::supabaseAdminBookStore', 'Error creating book:', err)
       error.value = err.message
@@ -106,12 +107,9 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
           `
           id,
           book_name,
+          book_image_url,
           created_at,
           enable,
-          book_image (
-            id,
-            book_image_url
-          ),
           book_header (
             id,
             book_header_name,
@@ -159,6 +157,7 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
       const updatePayload = {
         book_name: bookData.book_name,
         enable: bookData.enable,
+        book_image_url: bookData.book_image_url || null,
       }
 
       console.log('DEBUG::supabaseAdminBookStore', 'Update payload:', updatePayload)
