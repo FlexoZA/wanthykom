@@ -75,6 +75,15 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+    {
+      path: '/admin/books/:bookId/headers',
+      name: 'admin-book-headers',
+      component: () => import('@/views/admin/book-header/BookHeadersView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
   ],
 })
 

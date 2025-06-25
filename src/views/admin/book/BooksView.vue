@@ -122,9 +122,8 @@ const handleManageChapters = (bookId) => {
 }
 
 const handleManageHeaders = (bookId) => {
-  // TODO: Implement headers management later
   console.log('DEBUG::BooksView', 'Manage headers for book:', bookId)
-  showToastNotification('info', 'Coming Soon', 'Headers management will be implemented soon')
+  router.push(`/admin/books/${bookId}/headers`)
 }
 
 // Toast notification helpers
