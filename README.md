@@ -19,6 +19,17 @@ A modern web application built with Vue 3, Vite, and Supabase.
   - Smooth scrolling and URL-based chapter selection
   - Book headers and chapter-specific images
 
+- **Chapter Management System**
+
+  - Complete CRUD operations for book chapters
+  - Grid-based chapter display matching book system design
+  - Chapter-specific images with MediaManager integration
+  - Enable/disable status management
+  - Real-time form validation and error handling
+  - Component-based architecture without page reloads
+  - Toast notifications for all operations
+  - Loading animations and responsive design
+
 - **Dynamic Layout System**
 
   - Automatic layout switching based on routes
@@ -76,6 +87,16 @@ src/
 │   │   │   ├── AdminArticleList.vue    # Admin article list view
 │   │   │   ├── ArticleView.vue         # Single article view
 │   │   │   └── UpdateArticle.vue       # Article update wrapper
+│   │   ├── book/
+│   │   │   ├── AddBook.vue             # Book creation/editing form
+│   │   │   ├── BookList.vue            # Admin book list view
+│   │   │   ├── BookView.vue            # Single book view
+│   │   │   └── UpdateBook.vue          # Book update wrapper
+│   │   ├── chapter/
+│   │   │   ├── AddChapter.vue          # Chapter creation/editing form
+│   │   │   ├── ChapterList.vue         # Admin chapter list view
+│   │   │   ├── ChapterView.vue         # Single chapter view
+│   │   │   └── UpdateChapter.vue       # Chapter update wrapper
 │   │   ├── dialogs/
 │   │   │   └── ConfirmationDialog.vue  # Reusable confirmation modal
 │   │   ├── helpers/
@@ -118,8 +139,10 @@ src/
 │   └── index.js                        # Route configuration with layouts
 ├── stores/
 │   ├── admin/                          # Admin-specific stores
-│   │   ├── mediaManagerStore.js        # Media management state
-│   │   └── supabaseAdminArticleStore.js # Admin article management
+│   │   ├── AdminArticleStore.js        # Admin article management
+│   │   ├── AdminBookstore.js           # Admin book management
+│   │   ├── AdminChapterStore.js        # Admin chapter management
+│   │   └── mediaManagerStore.js        # Media management state
 │   ├── authentication/
 │   │   └── authenticationStore.js      # Auth state management
 │   └── web/                            # Public web stores
@@ -133,6 +156,10 @@ src/
     │   ├── AdminDashboard.vue          # Admin dashboard view
     │   ├── article/
     │   │   └── ArticlesView.vue        # Admin articles management
+    │   ├── book/
+    │   │   └── BooksView.vue           # Admin books management
+    │   ├── chapter/
+    │   │   └── ChaptersView.vue        # Admin chapters management
     │   └── media/
     │       └── MediaManagerView.vue    # Media management view
     ├── auth/
@@ -2397,6 +2424,378 @@ router.push('/admin')
 ```
 
 This authentication system provides enterprise-grade security while maintaining a smooth user experience, ensuring that sensitive admin functionality is properly protected while keeping the public content accessible to all users.
+
+## Chapter Management System
+
+The application features a comprehensive chapter management system that allows administrators to create, view, edit, and delete book chapters through a modern, component-based interface. The system uses Vue 3's Composition API throughout and provides a seamless user experience without page reloads, following the same design patterns as the existing book and article management systems.
+
+### Features
+
+- **Complete CRUD Operations**: Create, read, update, and delete chapters for books
+- **Component-Based Architecture**: Modern Vue 3 components with event-driven communication
+- **Grid Layout Display**: Chapters displayed in responsive grid matching book system design
+- **Chapter Images**: Integration with MediaManager for chapter-specific images
+- **Enable/Disable Toggle**: Custom switch component for chapter status management
+- **Real-Time Form Validation**: Comprehensive validation with user-friendly error messages
+- **Loading States**: Visual feedback during all operations with custom animations
+- **Error Handling**: Graceful error handling with retry functionality
+- **Toast Notifications**: Success/error feedback for all operations
+- **Responsive Design**: Optimized for all screen sizes
+- **Confirmation Dialogs**: Safe deletion with user confirmation
+- **Character Limits**: Title validation with character counter (255 max)
+
+### Database Structure
+
+The chapter management system works with the enhanced database structure:
+
+```sql
+-- Enhanced chapters table
+chapter (
+  id: uuid (primary key)
+  chapter_name: text
+  chapter_text: text
+  book_id: uuid (foreign key to book table)
+  enable: boolean (default: true)
+  book_chapter_image_url: text (direct image URL)
+  created_at: timestamp
+  updated_at: timestamp
+)
+```
+
+### Architecture Overview
+
+The chapter management system uses a component-based architecture that manages different views through local state:
+
+```
+ChaptersView (Main Container)
+├── ChapterList (Display all chapters for a book)
+├── AddChapter (Create/Edit form component)
+├── ChapterView (View single chapter details)
+└── UpdateChapter (Edit wrapper component)
+```
+
+### Chapter Store (`AdminChapterStore.js`)
+
+The chapter store provides comprehensive CRUD operations with proper error handling:
+
+```javascript
+import { useSupabaseAdminChapterStore } from '@/stores/admin/AdminChapterStore'
+
+// In your component
+const chapterStore = useSupabaseAdminChapterStore()
+
+// Fetch chapters for a specific book
+await chapterStore.fetchChapters(bookId)
+
+// Create new chapter
+await chapterStore.createChapter({
+  chapter_name: 'Chapter Title',
+  chapter_text: 'Chapter content...',
+  book_id: bookId,
+  enable: true,
+  book_chapter_image_url: 'https://example.com/image.jpg'
+})
+
+// Update existing chapter
+await chapterStore.updateChapter(chapterId, updateData)
+
+// Delete chapter
+await chapterStore.deleteChapter(chapterId, bookId)
+
+// Access reactive state
+const chapters = computed(() => chapterStore.getChapters)
+const isLoading = computed(() => chapterStore.getIsLoading)
+const error = computed(() => chapterStore.getError)
+```
+
+#### Store Methods
+
+- **`fetchChapters(bookId)`**: Retrieves all chapters for a specific book
+- **`createChapter(chapterData)`**: Creates a new chapter with automatic timestamps
+- **`fetchChapter(chapterId)`**: Retrieves a single chapter by ID
+- **`updateChapter(chapterId, chapterData)`**: Updates chapter and refreshes list
+- **`deleteChapter(chapterId, bookId)`**: Deletes chapter and refreshes list
+- **Getters**: `getChapters`, `getIsLoading`, `getError` for reactive state access
+
+### Main Container (`ChaptersView.vue`)
+
+The main container manages different views through local state and handles navigation between books and chapters:
+
+```vue
+<template>
+  <div class="p-6">
+    <h1 class="text-2xl font-bold text-white">Chapters Management</h1>
+    
+    <!-- Dynamic Component Rendering -->
+    <ChapterList
+      v-if="currentView === 'list'"
+      :book-id="selectedBookId"
+      :book-name="selectedBookName"
+      @back-to-books="handleBackToBooks"
+      @create-chapter="currentView = 'create'"
+      @view-chapter="handleViewChapter"
+      @edit-chapter="handleEditChapter"
+      @delete-chapter="handleDeleteChapter"
+    />
+
+    <AddChapter
+      v-else-if="currentView === 'create'"
+      :book-id="selectedBookId"
+      @chapter-created="handleChapterCreated"
+      @cancel="currentView = 'list'"
+    />
+
+    <!-- Toast Notifications -->
+    <NotificationToast
+      :show="showToast"
+      :type="toast.type"
+      :title="toast.title"
+      :message="toast.message"
+      @close="hideToast"
+    />
+  </div>
+</template>
+```
+
+#### Container Features
+
+- **Route-Based Navigation**: Automatically loads book context from URL parameters
+- **State Management**: Manages current view and selected items
+- **Event Handling**: Coordinates communication between components
+- **Toast Notifications**: Provides user feedback for all operations
+- **Error Handling**: Graceful handling of navigation and operation errors
+
+### Chapter List Component (`ChapterList.vue`)
+
+Displays chapters in a responsive grid with comprehensive functionality:
+
+```vue
+<template>
+  <div class="space-y-4">
+    <!-- Header with Book Info and Actions -->
+    <div class="flex justify-between items-center">
+      <div>
+        <h2 class="text-xl font-bold text-white">{{ bookName }} - Chapters</h2>
+        <p class="text-gray-400">{{ chapters.length }} chapters</p>
+      </div>
+      <div class="flex gap-2">
+        <button @click="$emit('create-chapter')" class="bg-green-600 hover:bg-green-700">
+          Create New Chapter
+        </button>
+        <button @click="$emit('back-to-books')" class="bg-gray-600 hover:bg-gray-700">
+          Back to Books
+        </button>
+      </div>
+    </div>
+
+    <!-- Chapters Grid -->
+    <div class="grid gap-4">
+      <div v-for="chapter in chapters" :key="chapter.id" class="bg-gray-800 rounded-lg p-4">
+        <!-- Chapter Image -->
+        <div class="w-24 h-24">
+          <img v-if="chapter.book_chapter_image_url" :src="chapter.book_chapter_image_url" />
+          <div v-else class="bg-gray-600 flex items-center justify-center">
+            <!-- Placeholder icon -->
+          </div>
+        </div>
+
+        <!-- Chapter Details -->
+        <div class="flex-1">
+          <div class="flex justify-between items-start mb-2">
+            <h3 class="text-lg font-semibold text-white">{{ chapter.chapter_name }}</h3>
+            <span :class="chapter.enable ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'">
+              {{ chapter.enable ? 'Enabled' : 'Disabled' }}
+            </span>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-2">
+            <button @click="viewChapter(chapter.id)">View</button>
+            <button @click="editChapter(chapter.id)">Edit</button>
+            <button @click="deleteChapter(chapter.id)">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+```
+
+#### List Features
+
+- **Responsive Grid**: Adapts to different screen sizes
+- **Chapter Previews**: Shows title, status, and metadata
+- **Status Indicators**: Visual badges for enabled/disabled chapters
+- **Action Buttons**: View, edit, and delete with clear visual hierarchy
+- **Image Handling**: Displays chapter images or placeholder icons
+- **Loading States**: Shows loading animation while fetching data
+- **Empty States**: Friendly message when no chapters exist
+
+### Chapter Form Component (`AddChapter.vue`)
+
+A versatile form component that handles both creation and editing:
+
+```vue
+<template>
+  <div class="max-w-4xl mx-auto p-6">
+    <h2 class="text-2xl font-bold text-white mb-6">
+      {{ mode === 'create' ? 'Add New Chapter' : 'Edit Chapter' }}
+    </h2>
+
+    <!-- Error Message Display -->
+    <div v-if="errorMessage" class="mb-6 p-4 bg-red-900/50 border border-red-600 rounded-md">
+      <p class="text-red-300 text-sm">{{ errorMessage }}</p>
+    </div>
+
+    <form @submit.prevent="handleSubmit" class="space-y-6">
+      <!-- Enable/Disable Toggle -->
+      <div class="flex items-center justify-between">
+        <label class="text-white">Enable Chapter</label>
+        <button type="button" @click="formData.enable = !formData.enable">
+          <!-- Custom toggle switch -->
+        </button>
+      </div>
+
+      <!-- Chapter Image Selection -->
+      <div>
+        <label class="block text-white font-medium mb-2">Chapter Image</label>
+        <select v-model="formData.book_chapter_image_url" @change="updateSelectedImage">
+          <option value="">No image selected</option>
+          <option v-for="image in availableImages" :key="image.path" :value="image.url">
+            {{ image.name }}
+          </option>
+        </select>
+        
+        <!-- Image Preview -->
+        <div v-if="selectedImageUrl" class="mt-3">
+          <img :src="selectedImageUrl" class="w-32 h-32 object-cover rounded-md" />
+        </div>
+      </div>
+
+      <!-- Chapter Title with Character Counter -->
+      <div>
+        <label class="block text-white font-medium mb-2">Chapter Title</label>
+        <input
+          v-model="formData.chapter_name"
+          type="text"
+          required
+          maxlength="255"
+          @input="clearError"
+        />
+        <p v-if="formData.chapter_name.length > 0" class="text-xs text-gray-400 mt-1">
+          {{ formData.chapter_name.length }}/255 characters
+        </p>
+      </div>
+
+      <!-- Chapter Content -->
+      <div>
+        <label class="block text-white font-medium mb-2">Chapter Content</label>
+        <textarea
+          v-model="formData.chapter_text"
+          required
+          rows="12"
+          @input="clearError"
+        ></textarea>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex justify-end gap-3 pt-4">
+        <button type="button" @click="$emit('cancel')">Cancel</button>
+        <button type="submit" :disabled="isSubmitting || !isFormValid">
+          {{ isSubmitting ? (mode === 'create' ? 'Creating...' : 'Updating...') : (mode === 'create' ? 'Create Chapter' : 'Update Chapter') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</template>
+```
+
+#### Form Features
+
+- **Dual Mode**: Handles both creation and editing with the same component
+- **MediaManager Integration**: Select images from uploaded media
+- **Image Preview**: Shows selected image thumbnail
+- **Custom Toggle Switch**: Beautiful enable/disable toggle with animations
+- **Form Validation**: Required fields with character limits
+- **Error Handling**: User-friendly error messages with auto-clear
+- **Loading States**: Disabled inputs and loading text during submission
+- **Auto-Population**: Pre-fills form data when editing existing chapters
+
+### Integration with Book Management
+
+The chapter system integrates seamlessly with the existing book management:
+
+```javascript
+// From BookList.vue - Navigate to chapter management
+const manageChapters = (bookId) => {
+  console.log('DEBUG::BookList', 'Manage chapters for book:', bookId)
+  emit('manage-chapters', bookId)
+}
+
+// From BooksView.vue - Handle chapter navigation
+const handleManageChapters = (bookId) => {
+  router.push(`/admin/books/${bookId}/chapters`)
+}
+```
+
+### Event-Driven Communication
+
+The system uses a clean event-driven architecture:
+
+```javascript
+// Component events flow
+ChapterList
+├── @create-chapter → ChaptersView → Switch to create mode
+├── @view-chapter → ChaptersView → Switch to view mode
+├── @edit-chapter → ChaptersView → Switch to edit mode
+├── @delete-chapter → ChaptersView → Call store delete method
+└── @back-to-books → ChaptersView → Navigate back to books
+
+AddChapter
+├── @chapter-created → ChaptersView → Show success toast, return to list
+├── @chapter-updated → ChaptersView → Show success toast, return to list
+└── @cancel → ChaptersView → Return to list without changes
+```
+
+### Usage Examples
+
+#### Creating a New Chapter
+
+```javascript
+// User clicks "Create New Chapter"
+// → ChaptersView switches to create mode
+// → AddChapter component renders in create mode
+// → User fills form and submits
+// → Store creates chapter in database
+// → Success toast appears
+// → UI returns to list with new chapter visible
+```
+
+#### Editing a Chapter
+
+```javascript
+// User clicks "Edit Chapter" on a chapter
+// → ChaptersView switches to edit mode with chapter ID
+// → UpdateChapter component fetches chapter data
+// → AddChapter component renders in edit mode with pre-filled data
+// → User modifies and submits
+// → Store updates chapter with new timestamp
+// → Success toast appears
+// → UI returns to list with updated chapter
+```
+
+### Benefits of Component Architecture
+
+- **No Page Reloads**: Seamless user experience with instant updates
+- **Reusable Components**: Single form handles both create and edit operations
+- **Clean State Management**: Local state eliminates routing complexity
+- **Better Performance**: No unnecessary route changes or component re-mounting
+- **Easier Testing**: Components can be tested in isolation
+- **Maintainable Code**: Clear separation of concerns and event-driven communication
+- **Scalable Design**: Easy to add new features or modify existing ones
+- **Consistent UX**: Matches existing book and article management patterns
+
+This chapter management system provides a modern, efficient interface for content management while maintaining clean architecture principles and excellent user experience, seamlessly integrating with the existing book management workflow.
 
 ## Getting Started
 

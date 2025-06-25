@@ -32,10 +32,8 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
             chapter_name,
             chapter_text,
             created_at,
-            chapter_image (
-              id,
-              chapter_image_url
-            )
+            enable,
+            book_chapter_image_url
           )
         `,
         )
@@ -120,10 +118,8 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
             chapter_name,
             chapter_text,
             created_at,
-            chapter_image (
-              id,
-              chapter_image_url
-            )
+            enable,
+            book_chapter_image_url
           )
         `,
         )

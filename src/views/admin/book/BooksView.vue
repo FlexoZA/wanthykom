@@ -15,6 +15,7 @@
       @edit-book="handleEditBook"
       @delete-book="handleDeleteBook"
       @manage-chapters="handleManageChapters"
+      @manage-headers="handleManageHeaders"
     />
 
     <!-- Create View -->
@@ -54,12 +55,15 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import BookList from '@/components/admin/book/BookList.vue'
 import AddBook from '@/components/admin/book/AddBook.vue'
 import BookView from '@/components/admin/book/BookView.vue'
 import UpdateBook from '@/components/admin/book/UpdateBook.vue'
 import NotificationToast from '@/components/admin/notification/NotificationToast.vue'
 import { useSupabaseAdminBookStore } from '@/stores/admin/AdminBookstore'
+
+const router = useRouter()
 
 const currentView = ref('list')
 const selectedBookId = ref(null)
@@ -113,8 +117,14 @@ const handleDeleteBook = async (bookId) => {
 }
 
 const handleManageChapters = (bookId) => {
-  // TODO: Implement chapter management logic later
   console.log('DEBUG::BooksView', 'Manage chapters for book:', bookId)
+  router.push(`/admin/books/${bookId}/chapters`)
+}
+
+const handleManageHeaders = (bookId) => {
+  // TODO: Implement headers management later
+  console.log('DEBUG::BooksView', 'Manage headers for book:', bookId)
+  showToastNotification('info', 'Coming Soon', 'Headers management will be implemented soon')
 }
 
 // Toast notification helpers

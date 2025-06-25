@@ -66,6 +66,15 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+    {
+      path: '/admin/books/:bookId/chapters',
+      name: 'admin-chapters',
+      component: () => import('@/views/admin/chapter/ChaptersView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
   ],
 })
 

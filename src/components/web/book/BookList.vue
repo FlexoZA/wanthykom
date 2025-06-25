@@ -36,9 +36,9 @@
               <h3 class="text-xl font-semibold text-gray-200 mb-4">{{ chapter.chapter_name }}</h3>
 
               <!-- Chapter Image -->
-              <div v-if="chapter.chapter_image && chapter.chapter_image.length > 0" class="mb-4">
+              <div v-if="chapter.book_chapter_image_url" class="mb-4">
                 <img
-                  :src="chapter.chapter_image[0].chapter_image_url"
+                  :src="chapter.book_chapter_image_url"
                   :alt="chapter.chapter_name"
                   class="w-full h-48 object-cover rounded-lg"
                 />

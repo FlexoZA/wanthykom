@@ -39,9 +39,7 @@ export const useSupabaseBookStore = defineStore('supabaseBook', {
             chapter (
                 chapter_name,
                 chapter_text,
-                chapter_image (
-                    chapter_image_url
-                )
+                book_chapter_image_url
             )
           `,
           )
