@@ -93,7 +93,16 @@
               <h3 class="text-lg font-semibold text-white truncate">
                 {{ article.article_name }}
               </h3>
-              <div class="flex items-center ml-2">
+              <div class="flex items-center gap-2 ml-2">
+                <!-- Featured Badge -->
+                <span
+                  v-if="article.article_featured"
+                  class="px-2 py-1 text-xs rounded-full bg-blue-900 text-blue-300"
+                  title="Featured Article"
+                >
+                  Featured
+                </span>
+                <!-- Enable Status Badge -->
                 <span
                   class="px-2 py-1 text-xs rounded-full"
                   :class="

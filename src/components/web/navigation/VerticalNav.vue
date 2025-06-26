@@ -11,6 +11,15 @@
       Voorwoord
     </RouterLink>
 
+    <!-- Articles Link -->
+    <RouterLink
+      to="/articles"
+      class="py-2 px-3 rounded hover:bg-gray-700 transition-colors mb-4 font-semibold"
+      active-class="bg-gray-700"
+    >
+      Drome en Gesigte
+    </RouterLink>
+
     <!-- Book Links with Chapter Dropdowns -->
     <div v-for="book in books" :key="book.book_name" class="mb-4">
       <div class="flex flex-col">

@@ -18,6 +18,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/articles',
+      name: 'articles',
+      component: () => import('@/views/web/ArticlesView.vue'),
+      meta: {
+        layout: 'default',
+      },
+    },
+    {
       path: '/books',
       name: 'books',
       component: () => import('@/views/web/BookView.vue'),

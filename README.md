@@ -19,6 +19,18 @@ A modern web application built with Vue 3, Vite, and Supabase.
   - Smooth scrolling and URL-based chapter selection
   - Book headers and chapter-specific images
 
+- **Book Header Management System**
+
+  - Complete CRUD operations for book headers (introduction/summary sections)
+  - Grid-based header display matching book system design
+  - Header-specific images with MediaManager integration
+  - Enable/disable status management for header visibility
+  - Real-time form validation and error handling
+  - Component-based architecture without page reloads
+  - Toast notifications for all operations
+  - Proper display order: Name → Image → Text
+  - Loading animations and responsive design
+
 - **Chapter Management System**
 
   - Complete CRUD operations for book chapters
@@ -92,6 +104,11 @@ src/
 │   │   │   ├── BookList.vue            # Admin book list view
 │   │   │   ├── BookView.vue            # Single book view
 │   │   │   └── UpdateBook.vue          # Book update wrapper
+│   │   ├── book-header/
+│   │   │   ├── AddBookHeader.vue       # Book header creation/editing form
+│   │   │   ├── BookHeaderList.vue      # Admin book header list view
+│   │   │   ├── BookHeaderView.vue      # Single book header view
+│   │   │   └── UpdateBookHeader.vue    # Book header update wrapper
 │   │   ├── chapter/
 │   │   │   ├── AddChapter.vue          # Chapter creation/editing form
 │   │   │   ├── ChapterList.vue         # Admin chapter list view
@@ -140,6 +157,7 @@ src/
 ├── stores/
 │   ├── admin/                          # Admin-specific stores
 │   │   ├── AdminArticleStore.js        # Admin article management
+│   │   ├── AdminBookHeaderStore.js     # Admin book header management
 │   │   ├── AdminBookstore.js           # Admin book management
 │   │   ├── AdminChapterStore.js        # Admin chapter management
 │   │   └── mediaManagerStore.js        # Media management state
@@ -158,6 +176,8 @@ src/
     │   │   └── ArticlesView.vue        # Admin articles management
     │   ├── book/
     │   │   └── BooksView.vue           # Admin books management
+    │   ├── book-header/
+    │   │   └── BookHeadersView.vue     # Admin book headers management
     │   ├── chapter/
     │   │   └── ChaptersView.vue        # Admin chapters management
     │   └── media/
@@ -652,6 +672,207 @@ This approach:
 - Maintains referential integrity between articles and images
 - Provides efficient data loading with minimal API calls
 
+## Featured Articles System
+
+The application implements a sophisticated content separation strategy using a featured articles system. This allows administrators to control which articles appear on the home page versus the dedicated articles section, providing clear content curation and organization.
+
+### Content Strategy Overview
+
+The featured articles system creates two distinct content areas:
+
+- **Home Page (Voorwoord)**: Displays only featured articles - carefully curated, highlighted content
+- **Articles Page (Drome en Gesigte)**: Displays only non-featured articles - additional stories and insights
+
+### Database Schema
+
+The featured articles system extends the base article table with an additional field:
+
+```sql
+-- Enhanced articles table with featured support
+article (
+  id: uuid (primary key)
+  article_name: text
+  article_text: text
+  article_image_url: text
+  article_featured: boolean (default: false)
+  enable: boolean (default: false)
+  created_at: timestamp
+  updated_at: timestamp
+)
+```
+
+### Content Separation Logic
+
+#### Home Page Articles (Featured Only)
+```javascript
+// Fetch only featured and enabled articles for home page
+const { data, error } = await supabase
+  .from('article')
+  .select('*')
+  .eq('article_featured', true)
+  .eq('enable', true)
+  .order('created_at', { ascending: false })
+```
+
+#### Articles Page (Non-Featured Only)
+```javascript
+// Fetch only non-featured but enabled articles for articles page
+const { data, error } = await supabase
+  .from('article')
+  .select('*')
+  .eq('article_featured', false)
+  .eq('enable', true)
+  .order('created_at', { ascending: false })
+```
+
+### Store Implementation
+
+The `supabaseArticleStore.js` provides separate methods for each content type:
+
+```javascript
+export const useSupabaseArticleStore = defineStore('supabaseArticle', {
+  state: () => ({
+    articles: [],           // Non-featured articles for articles page
+    featuredArticles: [],   // Featured articles for home page
+    isLoading: false,
+    error: null,
+  }),
+
+  actions: {
+    // Fetch featured articles for home page
+    async fetchFeaturedArticles() {
+      // Query with article_featured = true AND enable = true
+    },
+
+    // Fetch non-featured articles for articles page
+    async fetchArticles() {
+      // Query with article_featured = false AND enable = true
+    },
+  },
+})
+```
+
+### Component Usage
+
+The `ArticleList.vue` component supports both modes through a prop:
+
+```vue
+<!-- Home Page: Show featured articles -->
+<ArticleList :show-featured-only="true" />
+
+<!-- Articles Page: Show non-featured articles -->
+<ArticleList :show-featured-only="false" />
+```
+
+### Navigation Integration
+
+The system includes dedicated navigation for accessing different content areas:
+
+```vue
+<!-- VerticalNav.vue -->
+<RouterLink to="/" active-class="bg-gray-700">
+  Voorwoord  <!-- Home page with featured articles -->
+</RouterLink>
+
+<RouterLink to="/articles" active-class="bg-gray-700">
+  Drome en Gesigte  <!-- Articles page with non-featured articles -->
+</RouterLink>
+```
+
+### Admin Control Interface
+
+Administrators can control article featuring through an intuitive toggle in the admin interface:
+
+```vue
+<!-- AddArticle.vue -->
+<div class="flex items-center justify-between">
+  <div>
+    <label class="text-white">Featured Article</label>
+    <p class="text-sm text-gray-400">Featured articles appear on the home page</p>
+  </div>
+  <button
+    type="button"
+    @click="formData.article_featured = !formData.article_featured"
+    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+    :class="formData.article_featured ? 'bg-blue-600' : 'bg-gray-600'"
+  >
+    <span
+      class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+      :class="formData.article_featured ? 'translate-x-6' : 'translate-x-1'"
+    />
+  </button>
+</div>
+```
+
+### Visual Indicators
+
+The admin interface provides clear visual feedback for featured status:
+
+#### Admin Article List
+- **Featured Badge**: Blue badge showing "Featured" for featured articles
+- **Enable Status**: Green/red badge showing enabled/disabled status
+- **Both badges**: Displayed side by side for complete status overview
+
+#### Admin Article View
+- **Featured Article Badge**: Prominent blue badge when viewing featured articles
+- **Status Badges**: Multiple badges showing both featured and enabled status
+
+### Content Flow Diagram
+
+```
+Article Creation Flow:
+┌─────────────────┐
+│ Admin Creates   │
+│ Article         │
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│ Admin Sets      │
+│ Featured Toggle │
+└─────┬─────┬─────┘
+      │     │
+      ▼     ▼
+┌─────────┐ ┌──────────────┐
+│Featured │ │Non-Featured  │
+│= TRUE   │ │= FALSE       │
+└────┬────┘ └──────┬───────┘
+     │             │
+     ▼             ▼
+┌─────────────┐ ┌─────────────────┐
+│Appears on   │ │Appears on       │
+│Home Page    │ │Articles Page    │
+│ONLY         │ │ONLY             │
+└─────────────┘ └─────────────────┘
+```
+
+### Benefits
+
+- **Clear Content Curation**: Featured articles get prime real estate on the home page
+- **Extended Content Library**: Additional articles accessible through dedicated navigation
+- **No Content Duplication**: Each article appears in exactly one frontend location
+- **Simple Admin Control**: Single toggle determines article placement
+- **Better User Experience**: Users can find both curated highlights and additional content
+- **Scalable Content Strategy**: Easy to manage growing content library
+
+### Usage Examples
+
+#### Creating a Featured Article
+```javascript
+// Admin sets article_featured = true
+// Article appears on home page only
+// Provides curated, highlighted content experience
+```
+
+#### Creating a Regular Article
+```javascript
+// Admin sets article_featured = false (default)
+// Article appears on "Drome en Gesigte" page only
+// Extends content library without cluttering home page
+```
+
+This featured articles system provides a professional content management strategy that separates curated highlights from extended content, giving administrators precise control over the user content experience.
+
 ## Admin Article Management System
 
 The application features a comprehensive admin article management system that allows administrators to create, view, edit, and delete articles through a modern, component-based interface. The system uses Vue 3's Composition API throughout and provides a seamless user experience without page reloads.
@@ -716,7 +937,7 @@ import { useSupabaseAdminArticleStore } from '@/stores/admin/supabaseAdminArticl
 // In your component
 const articleStore = useSupabaseAdminArticleStore()
 
-// Fetch all articles
+// Fetch all articles with images and metadata
 await articleStore.fetchArticles()
 
 // Fetch single article
@@ -1466,10 +1687,14 @@ book (
 
 -- Book headers (introduction/summary sections)
 book_header (
-  id: uuid (primary key)
-  book_id: uuid (foreign key)
-  book_header_name: text
-  book_header_text: text
+  id: bigint (primary key, generated by default as identity)
+  created_at: timestamp with time zone (default: now())
+  updated_at: time without time zone (nullable)
+  book_id: bigint (foreign key to book table, cascade delete)
+  book_header_name: text (nullable)
+  book_header_text: text (nullable)
+  enable: boolean (default: false)
+  book_header_image_url: text (nullable)
 )
 
 -- Book chapters
@@ -2796,6 +3021,228 @@ AddChapter
 - **Consistent UX**: Matches existing book and article management patterns
 
 This chapter management system provides a modern, efficient interface for content management while maintaining clean architecture principles and excellent user experience, seamlessly integrating with the existing book management workflow.
+
+## Book Header Management System
+
+The application features a comprehensive book header management system that allows administrators to create, view, edit, and delete book headers (introduction/summary sections) through a modern, component-based interface. The system follows the exact same design patterns as the chapter management system, providing consistency and maintainability across the application.
+
+### Features
+
+- **Complete CRUD Operations**: Create, read, update, and delete book headers for any book
+- **Component-Based Architecture**: Modern Vue 3 components with event-driven communication
+- **Grid Layout Display**: Headers displayed in responsive grid matching book system design
+- **Header Images**: Integration with MediaManager for header-specific images
+- **Enable/Disable Toggle**: Custom switch component for header visibility management
+- **Real-Time Form Validation**: Comprehensive validation with user-friendly error messages
+- **Loading States**: Visual feedback during all operations with custom animations
+- **Error Handling**: Graceful error handling with retry functionality
+- **Toast Notifications**: Success/error feedback for all operations
+- **Responsive Design**: Optimized for all screen sizes
+- **Confirmation Dialogs**: Safe deletion with user confirmation
+- **Display Order Control**: Headers display in Name → Image → Text order on web interface
+- **RLS Policy Integration**: Row Level Security policies for public/admin access control
+
+### Database Structure
+
+The book header management system works with the following database structure:
+
+```sql
+-- Book headers table with comprehensive metadata
+book_header (
+  id: bigint (primary key, auto-generated)
+  created_at: timestamp with time zone (default: now())
+  updated_at: time without time zone (nullable, for tracking modifications)
+  book_id: bigint (foreign key to book table with cascade delete)
+  book_header_name: text (nullable, header title)
+  book_header_text: text (nullable, header content)
+  enable: boolean (default: false, controls public visibility)
+  book_header_image_url: text (nullable, header image URL)
+)
+
+-- RLS Policies
+-- Public access: only enabled headers
+-- Admin access: all headers regardless of status
+```
+
+### Architecture Overview
+
+The book header management system uses the same component-based architecture as chapters:
+
+```
+BookHeadersView (Main Container)
+├── BookHeaderList (Display all headers for a book)
+├── AddBookHeader (Create/Edit form component)
+├── BookHeaderView (View single header details)
+└── UpdateBookHeader (Edit wrapper component)
+```
+
+### Book Header Store (`AdminBookHeaderStore.js`)
+
+The book header store provides comprehensive CRUD operations with proper error handling:
+
+```javascript
+import { useSupabaseAdminBookHeaderStore } from '@/stores/admin/AdminBookHeaderStore'
+
+// In your component
+const bookHeaderStore = useSupabaseAdminBookHeaderStore()
+
+// Fetch headers for a specific book
+await bookHeaderStore.fetchBookHeaders(bookId)
+
+// Create new header
+await bookHeaderStore.createBookHeader({
+  book_header_name: 'Header Title',
+  book_header_text: 'Header content...',
+  book_id: bookId,
+  enable: true,
+  book_header_image_url: 'https://example.com/image.jpg'
+})
+
+// Update existing header
+await bookHeaderStore.updateBookHeader(headerId, updateData)
+
+// Delete header
+await bookHeaderStore.deleteBookHeader(headerId, bookId)
+
+// Access reactive state
+const bookHeaders = computed(() => bookHeaderStore.getBookHeaders)
+const isLoading = computed(() => bookHeaderStore.getIsLoading)
+const error = computed(() => bookHeaderStore.getError)
+```
+
+#### Store Methods
+
+- **`fetchBookHeaders(bookId)`**: Retrieves all headers for a specific book
+- **`createBookHeader(headerData)`**: Creates a new header with automatic timestamps
+- **`fetchBookHeader(headerId)`**: Retrieves a single header by ID
+- **`updateBookHeader(headerId, headerData)`**: Updates header (excluding updated_at for database compatibility)
+- **`deleteBookHeader(headerId, bookId)`**: Deletes header and refreshes list
+- **Getters**: `getBookHeaders`, `getIsLoading`, `getError` for reactive state access
+
+### Integration with Book Management
+
+The book header system integrates seamlessly with the existing book management:
+
+```javascript
+// From BookList.vue - Navigate to header management
+const manageHeaders = (bookId) => {
+  console.log('DEBUG::BookList', 'Manage headers for book:', bookId)
+  emit('manage-headers', bookId)
+}
+
+// From BooksView.vue - Handle header navigation
+const handleManageHeaders = (bookId) => {
+  router.push(`/admin/books/${bookId}/headers`)
+}
+```
+
+### Web Display Integration
+
+Book headers are seamlessly integrated into the public book display:
+
+```vue
+<!-- Book Headers in BookList.vue -->
+<div v-if="selectedBook.book_header && selectedBook.book_header.length > 0" class="mb-6 space-y-4">
+  <div v-for="header in selectedBook.book_header" :key="header.book_header_name" class="bg-gray-800 p-4 rounded-lg">
+    <!-- Header Name -->
+    <h3 class="text-lg font-semibold text-gray-200 mb-4">{{ header.book_header_name }}</h3>
+
+    <!-- Header Image -->
+    <div v-if="header.book_header_image_url" class="mb-4">
+      <img
+        :src="header.book_header_image_url"
+        :alt="header.book_header_name"
+        class="w-full h-48 object-cover rounded-lg"
+      />
+    </div>
+
+    <!-- Header Text -->
+    <div class="prose prose-invert max-w-none">
+      <p class="text-gray-300 whitespace-pre-wrap">{{ header.book_header_text }}</p>
+    </div>
+  </div>
+</div>
+```
+
+### RLS Policy Configuration
+
+The system includes Row Level Security policies for proper access control:
+
+```sql
+-- Public access policy (only enabled headers)
+CREATE POLICY "Enable read access for all users"
+ON "public"."book_header"
+TO public
+USING (enable = true);
+
+-- Admin access policy (separate policy for authenticated admin users)
+-- Allows full CRUD operations for administrators
+```
+
+### Event-Driven Communication
+
+The system uses the same clean event-driven architecture as chapters:
+
+```javascript
+// Component events flow
+BookHeaderList
+├── @create-book-header → BookHeadersView → Switch to create mode
+├── @view-book-header → BookHeadersView → Switch to view mode
+├── @edit-book-header → BookHeadersView → Switch to edit mode
+├── @delete-book-header → BookHeadersView → Call store delete method
+└── @back-to-books → BookHeadersView → Navigate back to books
+
+AddBookHeader
+├── @book-header-created → BookHeadersView → Show success toast, return to list
+├── @book-header-updated → BookHeadersView → Show success toast, return to list
+└── @cancel → BookHeadersView → Return to list without changes
+```
+
+### Usage Examples
+
+#### Creating a New Book Header
+
+```javascript
+// User clicks "Create New Header"
+// → BookHeadersView switches to create mode
+// → AddBookHeader component renders in create mode
+// → User fills form and submits
+// → Store creates header in database
+// → Success toast appears
+// → UI returns to list with new header visible
+```
+
+#### Managing Header Visibility
+
+```javascript
+// Admin enables/disables headers in admin panel
+// → Database updated with enable status
+// → RLS policy filters public access
+// → Web interface shows only enabled headers
+// → Disabled headers hidden from public view
+```
+
+### Key Features
+
+- **Consistent Architecture**: Follows exact same patterns as chapter management
+- **Image Support**: Full integration with MediaManager for header images
+- **Visibility Control**: Enable/disable functionality with RLS policy enforcement
+- **Display Order**: Proper Name → Image → Text order in web interface
+- **Form Validation**: Comprehensive validation with real-time feedback
+- **Error Handling**: Graceful error handling with user-friendly messages
+- **Responsive Design**: Optimized for all device sizes
+- **Toast Notifications**: Clear feedback for all user actions
+
+### Benefits
+
+- **Code Consistency**: Same patterns as chapter system for maintainability
+- **User Experience**: Seamless integration with existing book management workflow
+- **Content Control**: Granular control over header visibility and content
+- **Scalability**: Architecture supports easy extension and modification
+- **Security**: Proper access control through RLS policies
+- **Performance**: Efficient queries and reactive state management
+
+This book header management system provides a complete solution for managing book introduction and summary content, following established patterns while providing powerful functionality for both administrators and end users.
 
 ## Getting Started
 

@@ -21,6 +21,25 @@
         </button>
       </div>
 
+      <!-- Featured Article Switch -->
+      <div class="flex items-center justify-between">
+        <div>
+          <label class="text-white">Featured Article</label>
+          <p class="text-sm text-gray-400">Featured articles appear on the home page</p>
+        </div>
+        <button
+          type="button"
+          @click="formData.article_featured = !formData.article_featured"
+          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+          :class="formData.article_featured ? 'bg-blue-600' : 'bg-gray-600'"
+        >
+          <span
+            class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+            :class="formData.article_featured ? 'translate-x-6' : 'translate-x-1'"
+          />
+        </button>
+      </div>
+
       <!-- Article Image Selection -->
       <div>
         <label class="block text-white mb-2">Article Image</label>
@@ -47,7 +66,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
             </div>
@@ -173,6 +192,7 @@ const isSubmitting = ref(false)
 
 const formData = ref({
   enable: false,
+  article_featured: false,
   article_image_url: '',
   article_name: '',
   article_text: '',
@@ -205,6 +225,7 @@ onMounted(async () => {
   if (props.mode === 'edit' && props.article) {
     formData.value = {
       enable: props.article.enable,
+      article_featured: props.article.article_featured || false,
       article_image_url: props.article.article_image_url || '',
       article_name: props.article.article_name,
       article_text: props.article.article_text,
@@ -215,35 +236,20 @@ onMounted(async () => {
 const handleSubmit = async () => {
   try {
     isSubmitting.value = true
-    console.log('DEBUG::AddArticle', 'Form data before submit:', formData.value)
-    console.log('DEBUG::AddArticle', 'Mode:', props.mode)
-    console.log('DEBUG::AddArticle', 'Article ID:', props.article?.id)
+    console.log('DEBUG::AddArticle', 'Submitting form data:', formData.value)
 
     if (props.mode === 'create') {
-      await articleStore.createArticle(formData.value)
+      const result = await articleStore.createArticle(formData.value)
+      console.log('DEBUG::AddArticle', 'Article created successfully:', result)
       emit('article-created')
     } else {
-      console.log('DEBUG::AddArticle', 'Attempting to update article:', {
-        id: props.article.id,
-        data: formData.value,
-      })
       const result = await articleStore.updateArticle(props.article.id, formData.value)
-      if (result) {
-        emit('article-updated')
-      } else {
-        throw new Error('Update failed')
-      }
-    }
-
-    // Reset form after successful submission
-    formData.value = {
-      enable: false,
-      article_image_url: '',
-      article_name: '',
-      article_text: '',
+      console.log('DEBUG::AddArticle', 'Article updated successfully:', result)
+      emit('article-updated')
     }
   } catch (error) {
-    console.error('DEBUG::AddArticle', 'Error submitting form:', error)
+    console.error('DEBUG::AddArticle', 'Error submitting article:', error)
+    // Error handling is done in the store
   } finally {
     isSubmitting.value = false
   }

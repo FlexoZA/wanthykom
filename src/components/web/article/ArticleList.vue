@@ -4,10 +4,12 @@
       <LoadingAnimation />
     </div>
     <div v-else-if="error" class="text-red-400">Error: {{ error }}</div>
+    <div v-else-if="articles.length === 0" class="text-gray-400 text-center py-8">
+      <p>{{ showFeaturedOnly ? 'No featured articles found' : 'No articles found' }}</p>
+    </div>
     <div v-else>
       <div v-for="article in articles" :key="article.id">
         <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ article.article_name }}</h2>
-        <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ article.article_image_name }}</h2>
         <!-- Display image if it exists -->
         <div v-if="article.article_image_url" class="mb-6">
           <img
@@ -30,14 +32,31 @@ import { onMounted, computed } from 'vue'
 import { useSupabaseArticleStore } from '@/stores/web/supabaseArticleStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 
+const props = defineProps({
+  showFeaturedOnly: {
+    type: Boolean,
+    default: true
+  }
+})
+
 const articleStore = useSupabaseArticleStore()
 
-const articles = computed(() => articleStore.getArticles)
+const articles = computed(() => {
+  return props.showFeaturedOnly
+    ? articleStore.getFeaturedArticles
+    : articleStore.getArticles
+})
+
 const isLoading = computed(() => articleStore.getIsLoading)
 const error = computed(() => articleStore.getError)
 
 onMounted(async () => {
-  await articleStore.fetchArticles()
-  console.log('DEBUG::ArticleList', articles.value)
+  if (props.showFeaturedOnly) {
+    await articleStore.fetchFeaturedArticles()
+    console.log('DEBUG::ArticleList', 'Featured articles:', articles.value)
+  } else {
+    await articleStore.fetchArticles()
+    console.log('DEBUG::ArticleList', 'Non-featured articles:', articles.value)
+  }
 })
 </script>

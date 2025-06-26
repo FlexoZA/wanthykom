@@ -53,8 +53,16 @@
 
     <!-- Article Content -->
     <div v-else-if="article" class="bg-gray-800 rounded-lg p-6">
-      <!-- Status Badge -->
-      <div class="mb-6">
+      <!-- Status Badges -->
+      <div class="mb-6 flex gap-2">
+        <!-- Featured Badge -->
+        <span
+          v-if="article.article_featured"
+          class="px-3 py-1 text-sm rounded-full bg-blue-900 text-blue-300"
+        >
+          Featured Article
+        </span>
+        <!-- Enable Status Badge -->
         <span
           class="px-3 py-1 text-sm rounded-full"
           :class="article.enable ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'"
