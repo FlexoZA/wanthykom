@@ -123,7 +123,7 @@ export const useSupabaseAdminBookHeaderStore = defineStore('supabaseAdminBookHea
         book_header_text: bookHeaderData.book_header_text,
         enable: bookHeaderData.enable,
         book_header_image_url: bookHeaderData.book_header_image_url || null,
-        updated_at: new Date().toISOString(),
+        // Remove updated_at - let database handle it automatically or via trigger
       }
 
       console.log('DEBUG::supabaseAdminBookHeaderStore', 'Update payload:', updatePayload)

@@ -20,8 +20,22 @@
           <!-- Book Headers -->
           <div v-if="selectedBook.book_header && selectedBook.book_header.length > 0" class="mb-6 space-y-4">
             <div v-for="header in selectedBook.book_header" :key="header.book_header_name" class="bg-gray-800 p-4 rounded-lg">
-              <h3 class="text-lg font-semibold text-gray-200 mb-2">{{ header.book_header_name }}</h3>
-              <p class="text-gray-300">{{ header.book_header_text }}</p>
+              <!-- Header Name -->
+              <h3 class="text-lg font-semibold text-gray-200 mb-4">{{ header.book_header_name }}</h3>
+
+              <!-- Header Image -->
+              <div v-if="header.book_header_image_url" class="mb-4">
+                <img
+                  :src="header.book_header_image_url"
+                  :alt="header.book_header_name"
+                  class="w-full h-48 object-cover rounded-lg"
+                />
+              </div>
+
+              <!-- Header Text -->
+              <div class="prose prose-invert max-w-none">
+                <p class="text-gray-300 whitespace-pre-wrap">{{ header.book_header_text }}</p>
+              </div>
             </div>
           </div>
 
