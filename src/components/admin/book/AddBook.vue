@@ -6,16 +6,19 @@
 
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <!-- Enable/Disable Switch -->
-      <div class="flex items-center justify-between">
-        <label class="text-white">Enable Book</label>
+      <div class="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+        <div>
+          <label class="text-white font-medium">Enable Book</label>
+          <p class="text-gray-400 text-sm">Make this book visible to readers</p>
+        </div>
         <button
           type="button"
           @click="formData.enable = !formData.enable"
-          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           :class="formData.enable ? 'bg-green-600' : 'bg-gray-600'"
         >
           <span
-            class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+            class="inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out"
             :class="formData.enable ? 'translate-x-6' : 'translate-x-1'"
           />
         </button>

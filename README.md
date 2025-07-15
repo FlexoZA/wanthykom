@@ -60,7 +60,8 @@ A modern web application built with Vue 3, Vite, and Supabase.
 
 - **Navigation System**
 
-  - Sticky vertical navigation for books and chapters
+  - Sticky vertical navigation for books, chapters, and article categories
+  - Category-based article navigation with main menu prominence
   - Auto-expanding navigation based on current location
   - Responsive design (hidden on mobile)
   - Active state highlighting
@@ -168,6 +169,7 @@ src/
 │   │   └── authenticationStore.js      # Auth state management
 │   └── web/                            # Public web stores
 │       ├── supabaseArticleStore.js     # Public article data management
+│       ├── supabaseArticleCategoryStore.js # Public article category management
 │       ├── supabaseBookStore.js        # Book data management
 │       └── unsplashImageStore.js       # Image service integration
 ├── utils/
@@ -784,7 +786,7 @@ The `ArticleList.vue` component supports both modes through a prop:
 
 ### Navigation Integration
 
-The system includes dedicated navigation for accessing different content areas:
+The system includes category-based navigation for accessing different content areas:
 
 ```vue
 <!-- VerticalNav.vue -->
@@ -792,8 +794,15 @@ The system includes dedicated navigation for accessing different content areas:
   Voorwoord  <!-- Home page with featured articles -->
 </RouterLink>
 
-<RouterLink to="/articles" active-class="bg-gray-700">
-  Drome en Gesigte  <!-- Articles page with non-featured articles -->
+<!-- Article Categories as Main Menu Items -->
+<RouterLink
+  v-for="category in categories"
+  :key="category.id"
+  :to="{ name: 'articles-by-category', params: { categoryId: category.id } }"
+  class="py-2 px-3 rounded hover:bg-gray-700 transition-colors mb-4 font-semibold"
+  active-class="bg-gray-700"
+>
+  {{ category.catagory_name }}
 </RouterLink>
 ```
 
@@ -890,6 +899,213 @@ Article Creation Flow:
 ```
 
 This featured articles system provides a professional content management strategy that separates curated highlights from extended content, giving administrators precise control over the user content experience.
+
+## Category-Based Navigation System
+
+The application features a sophisticated category-based navigation system that dynamically displays article categories as main menu items in the web interface. This system provides users with intuitive access to categorized content while maintaining the separation between featured and non-featured articles.
+
+### Features
+
+- **Dynamic Category Loading**: Categories are fetched from the database and displayed only if they contain enabled, non-featured articles
+- **Main Menu Prominence**: Categories appear as top-level navigation items with the same styling as "Voorwoord" and book navigation
+- **Smart Filtering**: Only categories with available content are shown to users
+- **Deep Linking**: Direct URL navigation to specific categories (`/articles/category/:categoryId`)
+- **Responsive Design**: Category navigation adapts to screen size and is hidden on mobile
+- **Active State Management**: Visual highlighting of the currently selected category
+- **Seamless Integration**: Works alongside existing book and featured article navigation
+
+### Database Integration
+
+The system uses a relational query to fetch categories with their associated articles:
+
+```javascript
+// Fetch categories with enabled, non-featured articles
+const { data, error } = await supabase
+  .from('article_catagory')
+  .select(
+    `
+    id,
+    catagory_name,
+    article (
+      id,
+      article_name,
+      article_featured,
+      enable
+    )
+  `,
+  )
+  .order('catagory_name', { ascending: true })
+
+// Filter categories that have at least one enabled, non-featured article
+const categoriesWithArticles = data.filter(category => {
+  const hasEnabledNonFeaturedArticles = category.article.some(article => 
+    article.enable === true && article.article_featured === false
+  )
+  return hasEnabledNonFeaturedArticles
+})
+```
+
+### Web Store Implementation
+
+The `supabaseArticleCategoryStore.js` provides category management for the web interface:
+
+```javascript
+export const useSupabaseArticleCategoryStore = defineStore('supabaseArticleCategory', {
+  state: () => ({
+    categories: [],
+    isLoading: false,
+    error: null,
+  }),
+
+  actions: {
+    async fetchCategoriesWithArticles() {
+      // Fetch categories with enabled, non-featured articles
+      // Filter out empty categories
+      // Store results for navigation display
+    },
+  },
+})
+```
+
+### Enhanced Article Store
+
+The article store has been enhanced to support category-based filtering:
+
+```javascript
+export const useSupabaseArticleStore = defineStore('supabaseArticle', {
+  actions: {
+    // Existing methods for featured/non-featured articles
+    async fetchFeaturedArticles() { /* ... */ },
+    async fetchArticles() { /* ... */ },
+    
+    // New method for category-based filtering
+    async fetchArticlesByCategory(categoryId) {
+      // Fetch articles by category (non-featured and enabled only)
+      // Include category information in results
+    },
+  },
+})
+```
+
+### Navigation Implementation
+
+Categories are displayed as main menu items in the `VerticalNav.vue` component:
+
+```vue
+<template>
+  <nav class="navigation-container">
+    <!-- Home Link -->
+    <RouterLink to="/" class="main-nav-item">Voorwoord</RouterLink>
+
+    <!-- Article Categories as Main Menu Items -->
+    <RouterLink
+      v-for="category in categories"
+      :key="category.id"
+      :to="{ name: 'articles-by-category', params: { categoryId: category.id } }"
+      class="main-nav-item"
+      active-class="bg-gray-700"
+    >
+      {{ category.catagory_name }}
+    </RouterLink>
+
+    <!-- Book Navigation -->
+    <!-- ... existing book navigation ... -->
+  </nav>
+</template>
+```
+
+### Route Configuration
+
+The system includes dedicated routes for category-based navigation:
+
+```javascript
+// Standard articles route
+{
+  path: '/articles',
+  name: 'articles',
+  component: () => import('@/views/web/ArticlesView.vue'),
+  meta: { layout: 'default' },
+},
+
+// Category-specific articles route
+{
+  path: '/articles/category/:categoryId',
+  name: 'articles-by-category',
+  component: () => import('@/views/web/ArticlesView.vue'),
+  meta: { layout: 'default' },
+}
+```
+
+### Dynamic Page Titles
+
+The `ArticlesView.vue` component dynamically updates page titles based on category selection:
+
+```vue
+<template>
+  <div class="relative">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-100 mb-2">
+        {{ categoryName ? categoryName : 'Drome en Gesigte' }}
+      </h1>
+      <p class="text-gray-400">
+        {{ categoryName ? `Artikels in ${categoryName}` : 'Ontdek meer verhale en insigte' }}
+      </p>
+    </div>
+    <ArticleList :show-featured-only="false" :category-id="categoryId" />
+  </div>
+</template>
+```
+
+### Navigation Flow
+
+The category-based navigation creates the following user experience:
+
+```
+Navigation Structure:
+┌─────────────────────┐
+│ Voorwoord           │ → Featured Articles (Home Page)
+├─────────────────────┤
+│ Category 1          │ → Non-Featured Articles in Category 1
+│ Category 2          │ → Non-Featured Articles in Category 2
+│ Category N          │ → Non-Featured Articles in Category N
+├─────────────────────┤
+│ Book 1              │ → Book Navigation (Expandable)
+│ Book 2              │ → Book Navigation (Expandable)
+└─────────────────────┘
+```
+
+### Benefits
+
+- **Intuitive Organization**: Users can easily find articles by topic/category
+- **Content Separation**: Featured articles remain on home page, categories show additional content
+- **Dynamic Content**: Navigation automatically adapts to available content
+- **Consistent Experience**: Category navigation matches existing book navigation patterns
+- **Scalable Architecture**: Easy to add new categories without code changes
+- **Performance Optimized**: Only categories with content are loaded and displayed
+- **SEO Friendly**: Direct URLs for each category improve search engine indexing
+
+### Usage Examples
+
+#### Accessing Articles by Category
+
+```javascript
+// User clicks on a category in navigation
+// → Navigates to /articles/category/1
+// → ArticlesView loads with category context
+// → Page title updates to category name
+// → ArticleList displays filtered articles
+```
+
+#### Admin Category Management
+
+```javascript
+// Admin creates new category with articles
+// → Articles are marked as non-featured and enabled
+// → Category automatically appears in web navigation
+// → Users can immediately access the new category
+```
+
+This category-based navigation system provides a professional content organization strategy that enhances user experience while maintaining the clean separation between featured and categorized content.
 
 ## Admin Article Management System
 

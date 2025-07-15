@@ -29,32 +29,61 @@
         </button>
       </div>
 
-      <!-- Chapter Image Dropdown -->
+      <!-- Chapter Image Selection -->
       <div>
         <label class="block text-white font-medium mb-2">Chapter Image</label>
-        <select
-          v-model="formData.book_chapter_image_url"
-          @change="updateSelectedImage"
-          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="">No image selected</option>
-          <option
-            v-for="image in availableImages"
-            :key="image.path"
-            :value="image.url"
-          >
-            {{ image.name }}
-          </option>
-        </select>
+        <div class="flex gap-4 items-start">
+          <!-- Image Thumbnail -->
+          <div class="flex-shrink-0 w-20 h-20">
+            <img
+              v-if="selectedImageUrl"
+              :src="selectedImageUrl"
+              :alt="selectedImageName"
+              class="w-full h-full object-cover rounded-md border border-gray-600"
+            />
+            <div
+              v-else
+              class="w-full h-full bg-gray-600 rounded-md flex items-center justify-center border border-gray-600"
+            >
+              <svg
+                class="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+          </div>
 
-        <!-- Image Preview -->
-        <div v-if="selectedImageUrl" class="mt-3">
-          <p class="text-sm text-gray-400 mb-2">Preview:</p>
-          <img
-            :src="selectedImageUrl"
-            :alt="selectedImageName"
-            class="w-32 h-32 object-cover rounded-md border border-gray-600"
-          />
+          <!-- Image Dropdown -->
+          <div class="flex-1">
+            <select
+              v-model="formData.book_chapter_image_url"
+              @change="updateSelectedImage"
+              class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+            >
+              <option value="">Select an image</option>
+              <option
+                v-for="image in availableImages"
+                :key="image.path"
+                :value="image.url"
+              >
+                {{ image.name }}
+              </option>
+            </select>
+            <p v-if="mediaStore.getIsLoading" class="text-sm text-gray-400 mt-1">
+              Loading images...
+            </p>
+            <p v-else-if="availableImages.length === 0" class="text-sm text-gray-400 mt-1">
+              No images available. Upload images in Media Manager first.
+            </p>
+          </div>
         </div>
       </div>
 

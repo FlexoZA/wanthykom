@@ -175,7 +175,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
@@ -186,12 +186,11 @@ const emit = defineEmits(['create-article', 'view-article', 'edit-article', 'del
 const showDeleteDialog = ref(false)
 const articleToDelete = ref(null)
 
-// Local state management
-const articles = ref([])
-const isLoading = ref(false)
-const error = ref(null)
-
 const articleStore = useSupabaseAdminArticleStore()
+
+const articles = computed(() => articleStore.getArticles)
+const isLoading = computed(() => articleStore.getIsLoading)
+const error = computed(() => articleStore.getError)
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -203,18 +202,7 @@ const formatDate = (dateString) => {
   })
 }
 
-const fetchArticles = async () => {
-  try {
-    isLoading.value = true
-    error.value = null
-    articles.value = await articleStore.fetchArticles()
-  } catch (err) {
-    console.error('DEBUG::AdminArticleList', 'Error fetching articles:', err)
-    error.value = err.message
-  } finally {
-    isLoading.value = false
-  }
-}
+
 
 const viewArticle = (articleId) => {
   console.log('DEBUG::AdminArticleList', 'View article:', articleId)
@@ -233,18 +221,10 @@ const deleteArticle = (articleId) => {
   showDeleteDialog.value = true
 }
 
-const confirmDelete = async () => {
+const confirmDelete = () => {
   console.log('DEBUG::AdminArticleList', 'Confirmed delete for article:', articleToDelete.value?.id)
   if (articleToDelete.value) {
-    try {
-      await articleStore.deleteArticle(articleToDelete.value.id)
-      emit('delete-article', articleToDelete.value.id)
-      // Refresh the articles list
-      await fetchArticles()
-    } catch (err) {
-      console.error('DEBUG::AdminArticleList', 'Error deleting article:', err)
-      error.value = err.message
-    }
+    emit('delete-article', articleToDelete.value.id)
   }
   cancelDelete()
 }
@@ -256,16 +236,16 @@ const cancelDelete = () => {
 }
 
 const retryFetch = async () => {
-  await fetchArticles()
+  await articleStore.fetchArticles()
 }
 
 onMounted(() => {
-  fetchArticles()
+  articleStore.fetchArticles()
 })
 
 // Expose refresh method for parent component
 defineExpose({
-  refresh: fetchArticles
+  refresh: articleStore.fetchArticles
 })
 </script>
 

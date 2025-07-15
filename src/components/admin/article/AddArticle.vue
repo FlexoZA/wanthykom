@@ -6,35 +6,38 @@
 
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <!-- Enable/Disable Switch -->
-      <div class="flex items-center justify-between">
-        <label class="text-white">Enable Article</label>
+      <div class="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+        <div>
+          <label class="text-white font-medium">Enable Article</label>
+          <p class="text-gray-400 text-sm">Make this article visible to readers</p>
+        </div>
         <button
           type="button"
           @click="formData.enable = !formData.enable"
-          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           :class="formData.enable ? 'bg-green-600' : 'bg-gray-600'"
         >
           <span
-            class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+            class="inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out"
             :class="formData.enable ? 'translate-x-6' : 'translate-x-1'"
           />
         </button>
       </div>
 
       <!-- Featured Article Switch -->
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
         <div>
-          <label class="text-white">Featured Article</label>
-          <p class="text-sm text-gray-400">Featured articles appear on the home page</p>
+          <label class="text-white font-medium">Featured Article</label>
+          <p class="text-red-400 text-sm">Featured articles appear on the home page</p>
         </div>
         <button
           type="button"
           @click="formData.article_featured = !formData.article_featured"
-          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           :class="formData.article_featured ? 'bg-blue-600' : 'bg-gray-600'"
         >
           <span
-            class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+            class="inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out"
             :class="formData.article_featured ? 'translate-x-6' : 'translate-x-1'"
           />
         </button>
@@ -46,9 +49,10 @@
         <select
           v-model="formData.article_catagory_id"
           :disabled="categoriesLoading"
+          required
           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
         >
-          <option value="">Select a category (optional)</option>
+          <option value="">Select a category</option>
           <option
             v-for="category in availableCategories"
             :key="category.id"
@@ -165,7 +169,7 @@
         </button>
         <button
           type="submit"
-          :disabled="isSubmitting || !formData.article_name.trim() || !formData.article_text.trim()"
+          :disabled="isSubmitting || !formData.article_name.trim() || !formData.article_text.trim() || !formData.article_catagory_id"
           class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <svg

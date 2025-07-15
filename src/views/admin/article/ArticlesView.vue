@@ -10,7 +10,6 @@
     <!-- List View -->
     <ArticleList
       v-if="currentView === 'list'"
-      ref="articleListRef"
       @create-article="currentView = 'create'"
       @view-article="handleViewArticle"
       @edit-article="handleEditArticle"
@@ -53,7 +52,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref } from 'vue'
 import ArticleList from '@/components/admin/article/ArticleList.vue'
 import AddArticle from '@/components/admin/article/AddArticle.vue'
 import ArticleView from '@/components/admin/article/ArticleView.vue'
@@ -63,7 +62,6 @@ import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 
 const currentView = ref('list')
 const selectedArticleId = ref(null)
-const articleListRef = ref(null)
 const articleStore = useSupabaseAdminArticleStore()
 
 // Toast notification state
@@ -88,23 +86,11 @@ const handleEditArticle = (articleId) => {
 const handleArticleCreated = async () => {
   currentView.value = 'list'
   showToastNotification('success', 'Article Created', 'Article has been successfully created')
-
-  // Refresh the article list after switching back to list view
-  await nextTick()
-  if (articleListRef.value) {
-    articleListRef.value.refresh()
-  }
 }
 
 const handleArticleUpdated = async () => {
   currentView.value = 'list'
   showToastNotification('success', 'Article Updated', 'Article has been successfully updated')
-
-  // Refresh the article list after switching back to list view
-  await nextTick()
-  if (articleListRef.value) {
-    articleListRef.value.refresh()
-  }
 }
 
 const handleDeleteArticle = async (articleId) => {
@@ -116,7 +102,7 @@ const handleDeleteArticle = async (articleId) => {
       console.error('DEBUG::ArticlesView', 'Delete failed:', result.error)
       showToastNotification('error', 'Delete Failed', result.error || 'Failed to delete article')
     } else {
-      console.log('DEBUG::ArticlesView', 'Article deleted successfully')
+            console.log('DEBUG::ArticlesView', 'Article deleted successfully')
       showToastNotification('success', 'Article Deleted', 'Article has been successfully deleted')
     }
   } catch (err) {
