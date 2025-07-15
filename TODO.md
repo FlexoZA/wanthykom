@@ -4,6 +4,7 @@
 2: bug/scroll-to-top (Ensure we scroll to top when a new route is selected.)
 3: bug/navigation-highlight-chapter (Consider using the router as an option instead of mapping)
 4: bug/media-manager (Currently the supabase storage is set to public.)
+5: bug/Loading effect not on books (web)
 
 # feature tracker
 
@@ -13,4 +14,5 @@
 
 # TODO
 
-1: Replace view buttons on Chapters Management to icon
+1: Replace view buttons on Chapters Management to icon (Admin)
+2: Hide the "Tuis" category from (web)

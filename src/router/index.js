@@ -26,6 +26,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/articles/category/:categoryId',
+      name: 'articles-by-category',
+      component: () => import('@/views/web/ArticlesView.vue'),
+      meta: {
+        layout: 'default',
+      },
+    },
+    {
       path: '/books',
       name: 'books',
       component: () => import('@/views/web/BookView.vue'),

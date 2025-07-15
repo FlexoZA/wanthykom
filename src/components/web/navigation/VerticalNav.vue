@@ -11,15 +11,6 @@
       Voorwoord
     </RouterLink>
 
-    <!-- Articles Link -->
-    <RouterLink
-      to="/articles"
-      class="py-2 px-3 rounded hover:bg-gray-700 transition-colors mb-4 font-semibold"
-      active-class="bg-gray-700"
-    >
-      Drome en Gesigte
-    </RouterLink>
-
     <!-- Book Links with Chapter Dropdowns -->
     <div v-for="book in books" :key="book.book_name" class="mb-4">
       <div class="flex flex-col">
@@ -58,6 +49,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Article Categories as Main Menu Items -->
+    <RouterLink
+      v-for="category in categories"
+      :key="category.id"
+      :to="{ name: 'articles-by-category', params: { categoryId: category.id } }"
+      class="py-2 px-3 rounded hover:bg-gray-700 transition-colors mb-4 font-semibold"
+      active-class="bg-gray-700"
+    >
+      {{ category.catagory_name }}
+    </RouterLink>
   </nav>
 </template>
 
@@ -65,10 +67,13 @@
 import { RouterLink, useRoute } from 'vue-router'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useSupabaseBookStore } from '@/stores/web/supabaseBookStore'
+import { useSupabaseArticleCategoryStore } from '@/stores/web/supabaseArticleCategoryStore'
 
 const route = useRoute()
 const bookStore = useSupabaseBookStore()
+const categoryStore = useSupabaseArticleCategoryStore()
 const books = computed(() => bookStore.getBooks)
+const categories = computed(() => categoryStore.getCategories)
 const expandedBooks = ref({})
 
 const isBookActive = (bookName) => {
@@ -113,6 +118,7 @@ watch(() => route.query.book, (newBook) => {
 
 onMounted(async () => {
   await bookStore.fetchBooks()
+  await categoryStore.fetchCategoriesWithArticles()
   // Expand the current book if one is selected
   if (route.query.book) {
     expandedBooks.value[route.query.book] = true

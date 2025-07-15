@@ -71,7 +71,11 @@ export const useSupabaseArticleStore = defineStore('supabaseArticle', {
             article_text,
             article_image_url,
             article_featured,
-            enable
+            enable,
+            article_catagory (
+              id,
+              catagory_name
+            )
           `,
           )
           .eq('article_featured', false)
@@ -89,6 +93,50 @@ export const useSupabaseArticleStore = defineStore('supabaseArticle', {
         console.log('DEBUG::supabaseArticleStore', 'Fetched non-featured articles:', data)
       } catch (error) {
         console.error('DEBUG::supabaseArticleStore', 'Failed to fetch non-featured articles:', error)
+        this.error = error.message
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // Fetch articles by category (non-featured and enabled only)
+    async fetchArticlesByCategory(categoryId) {
+      this.isLoading = true
+      this.error = null
+
+      try {
+        const { data, error } = await supabase
+          .from('article')
+          .select(
+            `
+            id,
+            article_name,
+            article_text,
+            article_image_url,
+            article_featured,
+            enable,
+            article_catagory (
+              id,
+              catagory_name
+            )
+          `,
+          )
+          .eq('article_catagory_id', categoryId)
+          .eq('article_featured', false)
+          .eq('enable', true)
+          .order('created_at', { ascending: false })
+
+        console.log('DEBUG::supabaseArticleStore', 'Articles by category query result:', data)
+
+        if (error) {
+          console.error('DEBUG::supabaseArticleStore', 'Error fetching articles by category:', error)
+          throw error
+        }
+
+        this.articles = data || []
+        console.log('DEBUG::supabaseArticleStore', 'Fetched articles by category:', data)
+      } catch (error) {
+        console.error('DEBUG::supabaseArticleStore', 'Failed to fetch articles by category:', error)
         this.error = error.message
       } finally {
         this.isLoading = false

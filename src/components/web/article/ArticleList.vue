@@ -4,11 +4,11 @@
       <LoadingAnimation />
     </div>
     <div v-else-if="error" class="text-red-400">Error: {{ error }}</div>
-    <div v-else-if="articles.length === 0" class="text-gray-400 text-center py-8">
+    <div v-else-if="articles.length === 0" class="text-gray-400 mb-12 text-center py-8">
       <p>{{ showFeaturedOnly ? 'No featured articles found' : 'No articles found' }}</p>
     </div>
     <div v-else>
-      <div v-for="article in articles" :key="article.id">
+      <div v-for="article in articles" :key="article.id" class="mb-12">
         <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ article.article_name }}</h2>
         <!-- Display image if it exists -->
         <div v-if="article.article_image_url" class="mb-6">
@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, watch } from 'vue'
 import { useSupabaseArticleStore } from '@/stores/web/supabaseArticleStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 
@@ -36,6 +36,10 @@ const props = defineProps({
   showFeaturedOnly: {
     type: Boolean,
     default: true
+  },
+  categoryId: {
+    type: String,
+    default: null
   }
 })
 
@@ -50,13 +54,25 @@ const articles = computed(() => {
 const isLoading = computed(() => articleStore.getIsLoading)
 const error = computed(() => articleStore.getError)
 
-onMounted(async () => {
+const fetchArticles = async () => {
   if (props.showFeaturedOnly) {
     await articleStore.fetchFeaturedArticles()
     console.log('DEBUG::ArticleList', 'Featured articles:', articles.value)
+  } else if (props.categoryId) {
+    await articleStore.fetchArticlesByCategory(props.categoryId)
+    console.log('DEBUG::ArticleList', 'Articles by category:', articles.value)
   } else {
     await articleStore.fetchArticles()
     console.log('DEBUG::ArticleList', 'Non-featured articles:', articles.value)
   }
+}
+
+// Watch for category changes
+watch(() => props.categoryId, () => {
+  fetchArticles()
+})
+
+onMounted(async () => {
+  await fetchArticles()
 })
 </script>
