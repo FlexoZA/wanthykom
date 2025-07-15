@@ -10,6 +10,7 @@
     <!-- List View -->
     <ArticleList
       v-if="currentView === 'list'"
+      ref="articleListRef"
       @create-article="currentView = 'create'"
       @view-article="handleViewArticle"
       @edit-article="handleEditArticle"
@@ -52,7 +53,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import ArticleList from '@/components/admin/article/ArticleList.vue'
 import AddArticle from '@/components/admin/article/AddArticle.vue'
 import ArticleView from '@/components/admin/article/ArticleView.vue'
@@ -62,6 +63,7 @@ import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 
 const currentView = ref('list')
 const selectedArticleId = ref(null)
+const articleListRef = ref(null)
 const articleStore = useSupabaseAdminArticleStore()
 
 // Toast notification state
@@ -83,14 +85,26 @@ const handleEditArticle = (articleId) => {
   currentView.value = 'edit'
 }
 
-const handleArticleCreated = () => {
+const handleArticleCreated = async () => {
   currentView.value = 'list'
   showToastNotification('success', 'Article Created', 'Article has been successfully created')
+
+  // Refresh the article list after switching back to list view
+  await nextTick()
+  if (articleListRef.value) {
+    articleListRef.value.refresh()
+  }
 }
 
-const handleArticleUpdated = () => {
+const handleArticleUpdated = async () => {
   currentView.value = 'list'
   showToastNotification('success', 'Article Updated', 'Article has been successfully updated')
+
+  // Refresh the article list after switching back to list view
+  await nextTick()
+  if (articleListRef.value) {
+    articleListRef.value.refresh()
+  }
 }
 
 const handleDeleteArticle = async (articleId) => {

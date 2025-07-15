@@ -40,6 +40,34 @@
         </button>
       </div>
 
+      <!-- Article Category Selection -->
+      <div>
+        <label class="block text-white mb-2">Article Category</label>
+        <select
+          v-model="formData.article_catagory_id"
+          :disabled="categoriesLoading"
+          class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+        >
+          <option value="">Select a category (optional)</option>
+          <option
+            v-for="category in availableCategories"
+            :key="category.id"
+            :value="category.id"
+          >
+            {{ category.catagory_name }}
+          </option>
+        </select>
+        <p v-if="categoriesLoading" class="text-sm text-gray-400 mt-1">
+          Loading categories...
+        </p>
+        <p v-else-if="availableCategories.length === 0" class="text-sm text-gray-400 mt-1">
+          No categories available. Create categories first.
+        </p>
+        <p v-else class="text-sm text-gray-400 mt-1">
+          {{ availableCategories.length }} categories available
+        </p>
+      </div>
+
       <!-- Article Image Selection -->
       <div>
         <label class="block text-white mb-2">Article Image</label>
@@ -171,6 +199,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
+import { useSupabaseAdminArticleCategoryStore } from '@/stores/admin/AdminArticleCategoryStore'
 import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
 
 const props = defineProps({
@@ -187,16 +216,25 @@ const props = defineProps({
 
 const emit = defineEmits(['article-created', 'article-updated', 'cancel'])
 const articleStore = useSupabaseAdminArticleStore()
+const categoryStore = useSupabaseAdminArticleCategoryStore()
 const mediaStore = useMediaManagerStore()
 const isSubmitting = ref(false)
+
+// Local state for categories
+const categories = ref([])
+const categoriesLoading = ref(false)
 
 const formData = ref({
   enable: false,
   article_featured: false,
+  article_catagory_id: null,
   article_image_url: '',
   article_name: '',
   article_text: '',
 })
+
+// Get available categories from local state
+const availableCategories = computed(() => categories.value)
 
 // Get available images from media store
 const availableImages = computed(() => mediaStore.getImages)
@@ -212,8 +250,20 @@ const selectedImageName = computed(() => selectedImage.value?.name || '')
 
 // Update selected image when dropdown changes
 const updateSelectedImage = () => {
-  console.log('DEBUG::AddArticle', 'Selected image URL:', formData.value.article_image_url)
-  console.log('DEBUG::AddArticle', 'Selected image details:', selectedImage.value)
+  // Image preview will update automatically through computed properties
+}
+
+// Fetch categories
+const fetchCategories = async () => {
+  try {
+    categoriesLoading.value = true
+    const fetchedCategories = await categoryStore.fetchCategories()
+    categories.value = fetchedCategories
+  } catch (err) {
+    console.error('DEBUG::AddArticle', 'Error fetching categories:', err)
+  } finally {
+    categoriesLoading.value = false
+  }
 }
 
 // Initialize form data if in edit mode
@@ -222,10 +272,14 @@ onMounted(async () => {
   mediaStore.setBucket('articles')
   await mediaStore.fetchImages()
 
+  // Load categories
+  await fetchCategories()
+
   if (props.mode === 'edit' && props.article) {
     formData.value = {
       enable: props.article.enable,
       article_featured: props.article.article_featured || false,
+      article_catagory_id: props.article.article_catagory_id || null,
       article_image_url: props.article.article_image_url || '',
       article_name: props.article.article_name,
       article_text: props.article.article_text,
@@ -236,15 +290,12 @@ onMounted(async () => {
 const handleSubmit = async () => {
   try {
     isSubmitting.value = true
-    console.log('DEBUG::AddArticle', 'Submitting form data:', formData.value)
 
     if (props.mode === 'create') {
-      const result = await articleStore.createArticle(formData.value)
-      console.log('DEBUG::AddArticle', 'Article created successfully:', result)
+      await articleStore.createArticle(formData.value)
       emit('article-created')
     } else {
-      const result = await articleStore.updateArticle(props.article.id, formData.value)
-      console.log('DEBUG::AddArticle', 'Article updated successfully:', result)
+      await articleStore.updateArticle(props.article.id, formData.value)
       emit('article-updated')
     }
   } catch (error) {

@@ -7,7 +7,10 @@
 
 # feature tracker
 
-1: featuree/bookmark (Be able to bookmark a section of text to continue reading)
-2: feature/cache-system (Cache the data, bee able to turn the cache system on/off via env)
-3: feature/book-header (Add a book header section under the book image)
-4: feature/admin (Start building out admin layout)
+1: feature/bookmark (Be able to bookmark a section of text to continue reading)
+2: Create views for all components ie: create/view/update (Routes will be best)
+
+
+# TODO
+
+1: Replace view buttons on Chapters Management to icon

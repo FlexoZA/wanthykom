@@ -55,6 +55,13 @@
     <div v-else-if="article" class="bg-gray-800 rounded-lg p-6">
       <!-- Status Badges -->
       <div class="mb-6 flex gap-2">
+        <!-- Category Badge -->
+        <span
+          v-if="article.article_catagory && article.article_catagory.catagory_name"
+          class="px-3 py-1 text-sm rounded-full bg-purple-900 text-purple-300"
+        >
+          Category: {{ article.article_catagory.catagory_name }}
+        </span>
         <!-- Featured Badge -->
         <span
           v-if="article.article_featured"

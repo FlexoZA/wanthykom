@@ -39,7 +39,7 @@
     <div v-else-if="error" class="text-red-400 text-center py-8">
       <p>Error loading articles: {{ error }}</p>
       <button
-        @click="articleStore.fetchArticles()"
+        @click="retryFetch"
         class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
       >
         Retry
@@ -94,6 +94,14 @@
                 {{ article.article_name }}
               </h3>
               <div class="flex items-center gap-2 ml-2">
+                <!-- Category Badge -->
+                <span
+                  v-if="article.article_catagory && article.article_catagory.catagory_name"
+                  class="px-2 py-1 text-xs rounded-full bg-purple-900 text-purple-300"
+                  :title="`Category: ${article.article_catagory.catagory_name}`"
+                >
+                  {{ article.article_catagory.catagory_name }}
+                </span>
                 <!-- Featured Badge -->
                 <span
                   v-if="article.article_featured"
@@ -167,7 +175,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
@@ -178,11 +186,12 @@ const emit = defineEmits(['create-article', 'view-article', 'edit-article', 'del
 const showDeleteDialog = ref(false)
 const articleToDelete = ref(null)
 
-const articleStore = useSupabaseAdminArticleStore()
+// Local state management
+const articles = ref([])
+const isLoading = ref(false)
+const error = ref(null)
 
-const articles = computed(() => articleStore.getArticles)
-const isLoading = computed(() => articleStore.getIsLoading)
-const error = computed(() => articleStore.getError)
+const articleStore = useSupabaseAdminArticleStore()
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -192,6 +201,19 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+const fetchArticles = async () => {
+  try {
+    isLoading.value = true
+    error.value = null
+    articles.value = await articleStore.fetchArticles()
+  } catch (err) {
+    console.error('DEBUG::AdminArticleList', 'Error fetching articles:', err)
+    error.value = err.message
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const viewArticle = (articleId) => {
@@ -211,10 +233,18 @@ const deleteArticle = (articleId) => {
   showDeleteDialog.value = true
 }
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
   console.log('DEBUG::AdminArticleList', 'Confirmed delete for article:', articleToDelete.value?.id)
   if (articleToDelete.value) {
-    emit('delete-article', articleToDelete.value.id)
+    try {
+      await articleStore.deleteArticle(articleToDelete.value.id)
+      emit('delete-article', articleToDelete.value.id)
+      // Refresh the articles list
+      await fetchArticles()
+    } catch (err) {
+      console.error('DEBUG::AdminArticleList', 'Error deleting article:', err)
+      error.value = err.message
+    }
   }
   cancelDelete()
 }
@@ -225,8 +255,17 @@ const cancelDelete = () => {
   articleToDelete.value = null
 }
 
+const retryFetch = async () => {
+  await fetchArticles()
+}
+
 onMounted(() => {
-  articleStore.fetchArticles()
+  fetchArticles()
+})
+
+// Expose refresh method for parent component
+defineExpose({
+  refresh: fetchArticles
 })
 </script>
 

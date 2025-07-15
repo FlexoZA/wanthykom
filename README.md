@@ -7,6 +7,8 @@ A modern web application built with Vue 3, Vite, and Supabase.
 - **Article System**
 
   - Rich content display with text and images
+  - Article categorization with dropdown selection
+  - Category-based organization and filtering
   - Responsive design with proper loading states
   - Articles ordered by creation date
   - Error handling and user-friendly feedback
@@ -157,6 +159,7 @@ src/
 ├── stores/
 │   ├── admin/                          # Admin-specific stores
 │   │   ├── AdminArticleStore.js        # Admin article management
+│   │   ├── AdminArticleCategoryStore.js # Admin article category management
 │   │   ├── AdminBookHeaderStore.js     # Admin book header management
 │   │   ├── AdminBookstore.js           # Admin book management
 │   │   ├── AdminChapterStore.js        # Admin chapter management
@@ -529,6 +532,9 @@ The application features a comprehensive article management system that displays
 ### Features
 
 - **Rich Content Display**: Articles support both text content and associated images
+- **Article Categorization**: Complete category management with dropdown selection
+- **Category Organization**: Articles can be organized into categories for better content structure
+- **Category Display**: Categories are displayed as badges in article lists and views
 - **Responsive Images**: Article images are displayed with proper aspect ratios and responsive styling
 - **Loading States**: Proper loading indicators while fetching articles
 - **Error Handling**: Graceful error handling with user-friendly error messages
@@ -537,7 +543,7 @@ The application features a comprehensive article management system that displays
 
 ### Database Structure
 
-The article system uses two main Supabase tables:
+The article system uses three main Supabase tables:
 
 ```sql
 -- Main articles table
@@ -545,6 +551,18 @@ article (
   id: uuid (primary key)
   article_name: text
   article_text: text
+  article_featured: boolean
+  article_catagory_id: bigint (foreign key)
+  article_image_url: text
+  enable: boolean
+  created_at: timestamp
+  updated_at: timestamp
+)
+
+-- Article categories table
+article_catagory (
+  id: bigint (primary key)
+  catagory_name: text
   created_at: timestamp
 )
 
@@ -880,6 +898,9 @@ The application features a comprehensive admin article management system that al
 ### Features
 
 - **Complete CRUD Operations**: Create, read, update, and delete articles
+- **Article Category Management**: Complete category system with dropdown selection
+- **Category Integration**: Categories are displayed as badges in admin interface
+- **Category Store**: Separate store for managing article categories
 - **Component-Based Architecture**: Modern Vue 3 components with event-driven communication
 - **Rich Form Interface**: Article creation and editing with validation
 - **Real-Time Updates**: Immediate UI updates after operations
@@ -1369,6 +1390,161 @@ ArticleView
 - **Scalable Design**: Easy to add new features or modify existing ones
 
 This admin article management system provides a modern, efficient interface for content management while maintaining clean architecture principles and excellent user experience.
+
+## Article Category System
+
+The application features a comprehensive article category management system that allows administrators to organize articles into categories for better content structure and user navigation. The system provides a clean dropdown interface for category selection during article creation and editing.
+
+### Features
+
+- **Category Management**: Complete CRUD operations for article categories
+- **Direct API Calls**: Simplified store implementation without reactive state management
+- **Dropdown Selection**: Intuitive category selection in article forms
+- **Category Display**: Categories displayed as purple badges in article lists and views
+- **Optional Categories**: Categories are optional for articles (can be left unselected)
+- **Loading States**: Visual feedback during category loading
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Database Relations**: Foreign key relationship between articles and categories
+
+### Database Structure
+
+The category system uses a simple table structure with foreign key relationships:
+
+```sql
+-- Article categories table
+article_catagory (
+  id: bigint (primary key, auto-generated)
+  created_at: timestamp with time zone (default: now())
+  catagory_name: text (category name)
+)
+
+-- Articles table with category relationship
+article (
+  id: bigint (primary key)
+  article_name: text
+  article_text: text
+  article_catagory_id: bigint (foreign key to article_catagory.id)
+  -- ... other fields
+)
+```
+
+### Category Store (`AdminArticleCategoryStore.js`)
+
+The category store provides direct API calls without reactive state management:
+
+```javascript
+import { useSupabaseAdminArticleCategoryStore } from '@/stores/admin/AdminArticleCategoryStore'
+
+// In your component
+const categoryStore = useSupabaseAdminArticleCategoryStore()
+
+// Fetch all categories
+const categories = await categoryStore.fetchCategories()
+
+// Create new category
+await categoryStore.createCategory({
+  catagory_name: 'Technology'
+})
+
+// Update existing category
+await categoryStore.updateCategory(categoryId, {
+  catagory_name: 'Updated Name'
+})
+
+// Delete category
+await categoryStore.deleteCategory(categoryId)
+```
+
+#### Store Methods
+
+- **`fetchCategories()`**: Retrieves all categories ordered by name
+- **`createCategory(data)`**: Creates a new category
+- **`fetchCategory(id)`**: Retrieves a single category by ID
+- **`updateCategory(id, data)`**: Updates an existing category
+- **`deleteCategory(id)`**: Deletes a category
+
+### Integration with Article Forms
+
+Categories are seamlessly integrated into the article creation and editing forms:
+
+```vue
+<!-- Category Selection Dropdown -->
+<div>
+  <label class="block text-white mb-2">Article Category</label>
+  <select
+    v-model="formData.article_catagory_id"
+    :disabled="categoriesLoading"
+    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+  >
+    <option value="">Select a category (optional)</option>
+    <option
+      v-for="category in availableCategories"
+      :key="category.id"
+      :value="category.id"
+    >
+      {{ category.catagory_name }}
+    </option>
+  </select>
+</div>
+```
+
+### Category Display
+
+Categories are displayed as purple badges throughout the interface:
+
+```vue
+<!-- Category Badge in Article Lists -->
+<span
+  v-if="article.article_catagory && article.article_catagory.catagory_name"
+  class="px-2 py-1 text-xs rounded-full bg-purple-900 text-purple-300"
+>
+  {{ article.article_catagory.catagory_name }}
+</span>
+```
+
+### Usage Examples
+
+#### Adding Category to Article Creation
+
+```javascript
+// When creating an article
+const articleData = {
+  article_name: 'My Article',
+  article_text: 'Article content...',
+  article_catagory_id: 1, // Selected category ID
+  enable: true
+}
+
+await articleStore.createArticle(articleData)
+```
+
+#### Displaying Articles with Categories
+
+```javascript
+// Articles are fetched with category information
+const articles = await articleStore.fetchArticles()
+
+// Each article includes category data:
+// {
+//   id: 1,
+//   article_name: 'Article Title',
+//   article_catagory: {
+//     id: 1,
+//     catagory_name: 'Technology'
+//   }
+// }
+```
+
+### Benefits
+
+- **Content Organization**: Articles can be organized into logical categories
+- **User Navigation**: Categories help users find related content
+- **Admin Efficiency**: Easy category management through dropdown selection
+- **Visual Clarity**: Category badges provide immediate visual context
+- **Flexible Design**: Categories are optional and don't break existing articles
+- **Scalable Architecture**: Easy to extend with additional category features
+
+This article category system provides a solid foundation for content organization while maintaining simplicity and ease of use for administrators.
 
 ## Media Manager System
 
