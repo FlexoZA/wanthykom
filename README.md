@@ -1114,19 +1114,21 @@ The application features a comprehensive admin article management system that al
 ### Features
 
 - **Complete CRUD Operations**: Create, read, update, and delete articles
-- **Article Category Management**: Complete category system with dropdown selection
+- **Article Category Management**: Complete category system with dropdown selection (now required)
 - **Category Integration**: Categories are displayed as badges in admin interface
 - **Category Store**: Separate store for managing article categories
 - **Component-Based Architecture**: Modern Vue 3 components with event-driven communication
 - **Rich Form Interface**: Article creation and editing with validation
-- **Real-Time Updates**: Immediate UI updates after operations
+- **Real-Time Updates**: Immediate UI updates after operations through reactive store management
 - **Confirmation Dialogs**: Safe deletion with user confirmation
-- **Loading States**: Visual feedback during all operations
+- **Loading States**: Visual feedback during all operations with proper button states
 - **Error Handling**: Comprehensive error handling with user-friendly messages
 - **Responsive Design**: Optimized for all screen sizes
 - **Enable/Disable Toggle**: Custom switch component for article status
 - **Image Support**: Dropdown for article image selection (extensible)
 - **Date Tracking**: Automatic creation and update timestamp management
+- **Reactive State Management**: Uses Pinia store with computed properties for automatic UI updates
+- **No Manual Refresh**: Automatic list updates after create/update/delete operations
 
 ### Architecture Overview
 
@@ -1164,17 +1166,17 @@ article_image (
 )
 ```
 
-### Admin Article Store (`supabaseAdminArticleStore.js`)
+### Admin Article Store (`AdminArticleStore.js`)
 
-The admin store provides comprehensive CRUD operations with proper error handling:
+The admin store provides comprehensive CRUD operations with reactive state management using Pinia:
 
 ```javascript
-import { useSupabaseAdminArticleStore } from '@/stores/admin/supabaseAdminArticleStore'
+import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 
 // In your component
 const articleStore = useSupabaseAdminArticleStore()
 
-// Fetch all articles with images and metadata
+// Fetch all articles with categories and metadata
 await articleStore.fetchArticles()
 
 // Fetch single article
@@ -1184,6 +1186,7 @@ const article = await articleStore.fetchArticle(articleId)
 await articleStore.createArticle({
   article_name: 'Title',
   article_text: 'Content',
+  article_catagory_id: 1, // Required category selection
   enable: true,
 })
 
@@ -1191,10 +1194,11 @@ await articleStore.createArticle({
 await articleStore.updateArticle(articleId, {
   article_name: 'Updated Title',
   article_text: 'Updated Content',
+  article_catagory_id: 2,
   enable: false,
 })
 
-// Delete article
+// Delete article (automatically refreshes list)
 await articleStore.deleteArticle(articleId)
 
 // Access reactive state
@@ -1205,12 +1209,31 @@ const error = computed(() => articleStore.getError)
 
 #### Store Methods
 
-- **`fetchArticles()`**: Retrieves all articles with images and metadata
+- **`fetchArticles()`**: Retrieves all articles with categories and metadata, updates reactive state
 - **`fetchArticle(id)`**: Retrieves a single article by ID
-- **`createArticle(data)`**: Creates a new article with automatic timestamps
-- **`updateArticle(id, data)`**: Updates an existing article with new timestamp
-- **`deleteArticle(id)`**: Safely deletes an article and refreshes the list
+- **`createArticle(data)`**: Creates a new article with automatic timestamps and refreshes list
+- **`updateArticle(id, data)`**: Updates an existing article with new timestamp and refreshes list
+- **`deleteArticle(id)`**: Safely deletes an article and automatically refreshes the list
 - **Getters**: `getArticles`, `getIsLoading`, `getError` for reactive state access
+
+#### Store Architecture
+
+The store uses Pinia's `defineStore` pattern with reactive state management:
+
+```javascript
+export const useSupabaseAdminArticleStore = defineStore('supabaseAdminArticle', () => {
+  const articles = ref([])
+  const isLoading = ref(false)
+  const error = ref(null)
+
+  // Computed getters
+  const getArticles = computed(() => articles.value)
+  const getIsLoading = computed(() => isLoading.value)
+  const getError = computed(() => error.value)
+
+  // All CRUD operations automatically update reactive state
+  // No manual refresh calls needed in components
+})
 
 ### Main Container (`ArticlesView.vue`)
 
@@ -1279,9 +1302,9 @@ const handleDeleteArticle = async (articleId) => {
 }
 ```
 
-### Article List Component (`AdminArticleList.vue`)
+### Article List Component (`ArticleList.vue`)
 
-Displays all articles in a responsive grid with action buttons:
+Displays all articles in a responsive grid with action buttons using reactive store data:
 
 ```vue
 <template>
@@ -1301,8 +1324,8 @@ Displays all articles in a responsive grid with action buttons:
           <!-- Article Image -->
           <div class="w-24 h-24">
             <img
-              v-if="article.article_image?.length"
-              :src="article.article_image[0].article_image_url"
+              v-if="article.article_image_url"
+              :src="article.article_image_url"
             />
             <div v-else class="bg-gray-600 flex items-center justify-center">
               <svg><!-- Image placeholder icon --></svg>
@@ -1313,11 +1336,22 @@ Displays all articles in a responsive grid with action buttons:
           <div class="flex-1">
             <div class="flex justify-between items-start mb-2">
               <h3 class="text-lg font-semibold text-white">{{ article.article_name }}</h3>
-              <span
-                :class="article.enable ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'"
-              >
-                {{ article.enable ? 'Enabled' : 'Disabled' }}
-              </span>
+              <div class="flex items-center gap-2">
+                <!-- Category Badge -->
+                <span
+                  v-if="article.article_catagory && article.article_catagory.catagory_name"
+                  class="px-2 py-1 text-xs rounded-full bg-purple-900 text-purple-300"
+                >
+                  {{ article.article_catagory.catagory_name }}
+                </span>
+                <!-- Status Badge -->
+                <span
+                  :class="article.enable ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'"
+                  class="px-2 py-1 text-xs rounded-full"
+                >
+                  {{ article.enable ? 'Enabled' : 'Disabled' }}
+                </span>
+              </div>
             </div>
 
             <p class="text-gray-400 mb-3">{{ article.article_text.substring(0, 120) }}...</p>
@@ -1359,10 +1393,13 @@ Displays all articles in a responsive grid with action buttons:
 - **Responsive Grid**: Adapts to different screen sizes
 - **Article Previews**: Shows title, truncated content, and metadata
 - **Status Indicators**: Visual badges for enabled/disabled articles
+- **Category Display**: Purple badges showing article categories
 - **Action Buttons**: View, edit, and delete with clear visual hierarchy
 - **Image Handling**: Displays article images or placeholder icons
 - **Date Formatting**: Human-readable creation and update dates
 - **Delete Confirmation**: Requires user confirmation before deletion
+- **Reactive Updates**: Automatically updates when store data changes
+- **No Manual Refresh**: List updates automatically after operations
 
 ### Article Form Component (`AddArticle.vue`)
 
@@ -1392,15 +1429,23 @@ A versatile form component that handles both creation and editing:
         </button>
       </div>
 
-      <!-- Article Image Dropdown -->
+      <!-- Article Category Selection -->
       <div>
-        <label class="block text-white mb-2">Article Image</label>
+        <label class="block text-white mb-2">Article Category</label>
         <select
-          v-model="formData.article_image_id"
-          class="w-full bg-gray-700 border border-gray-600 rounded-md text-white"
+          v-model="formData.article_catagory_id"
+          :disabled="categoriesLoading"
+          required
+          class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
         >
-          <option value="">Select an image</option>
-          <!-- Extensible for future image management -->
+          <option value="">Select a category</option>
+          <option
+            v-for="category in availableCategories"
+            :key="category.id"
+            :value="category.id"
+          >
+            {{ category.catagory_name }}
+          </option>
         </select>
       </div>
 
@@ -1440,8 +1485,8 @@ A versatile form component that handles both creation and editing:
         </button>
         <button
           type="submit"
-          :disabled="isSubmitting"
-          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+          :disabled="isSubmitting || !formData.article_name.trim() || !formData.article_text.trim() || !formData.article_catagory_id"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {{ isSubmitting ? 'Saving...' : mode === 'create' ? 'Create Article' : 'Update Article' }}
         </button>
@@ -1455,11 +1500,13 @@ A versatile form component that handles both creation and editing:
 
 - **Dual Mode**: Handles both creation and editing with the same component
 - **Custom Toggle Switch**: Beautiful enable/disable toggle with smooth animations
-- **Form Validation**: Required fields with proper input types
+- **Required Category Selection**: Category selection is now required for all articles
+- **Form Validation**: Required fields with proper input types and category validation
 - **Loading States**: Disabled inputs and loading text during submission
 - **Auto-Population**: Pre-fills form data when editing existing articles
 - **Responsive Design**: Optimized layout for all screen sizes
 - **Event Communication**: Emits events for parent component handling
+- **Button State Management**: Submit button disabled until all required fields are filled
 
 ### Article View Component (`ArticleView.vue`)
 
@@ -1483,8 +1530,14 @@ Displays a single article with full content and metadata:
     </div>
 
     <div v-if="article" class="bg-gray-800 rounded-lg p-6">
-      <!-- Status Badge -->
-      <div class="mb-6">
+      <!-- Status and Category Badges -->
+      <div class="mb-6 flex items-center gap-2">
+        <span
+          v-if="article.article_catagory && article.article_catagory.catagory_name"
+          class="px-3 py-1 text-sm rounded-full bg-purple-900 text-purple-300"
+        >
+          {{ article.article_catagory.catagory_name }}
+        </span>
         <span
           :class="article.enable ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'"
           class="px-3 py-1 text-sm rounded-full"
@@ -1522,20 +1575,20 @@ Displays a single article with full content and metadata:
 
 ### Event-Driven Communication
 
-The system uses a clean event-driven architecture:
+The system uses a clean event-driven architecture with automatic state management:
 
 ```javascript
 // Component events flow
-AdminArticleList
+ArticleList
 ├── @create-article → ArticlesView → Switch to create mode
 ├── @view-article → ArticlesView → Switch to view mode
 ├── @edit-article → ArticlesView → Switch to edit mode
-└── @delete-article → ArticlesView → Call store delete method
+└── @delete-article → ArticlesView → Call store delete method (auto-refreshes)
 
 AddArticle
-├── @article-created → ArticlesView → Return to list
-├── @article-updated → ArticlesView → Return to list
-└── @cancel → ArticlesView → Return to list
+├── @article-created → ArticlesView → Return to list (no manual refresh needed)
+├── @article-updated → ArticlesView → Return to list (no manual refresh needed)
+└── @cancel → ArticlesView → Return to list without changes
 
 ArticleView
 ├── @edit-article → ArticlesView → Switch to edit mode
@@ -1568,9 +1621,9 @@ ArticleView
 // User clicks "Create New Article"
 // → ArticlesView switches to create mode
 // → AddArticle component renders in create mode
-// → User fills form and submits
-// → Store creates article in database
-// → UI returns to list with new article visible
+// → User fills form (including required category selection) and submits
+// → Store creates article in database and automatically refreshes list
+// → UI returns to list with new article visible immediately
 ```
 
 #### Editing an Article
@@ -1581,8 +1634,8 @@ ArticleView
 // → UpdateArticle component fetches article data
 // → AddArticle component renders in edit mode with pre-filled data
 // → User modifies and submits
-// → Store updates article with new timestamp
-// → UI returns to list with updated article
+// → Store updates article with new timestamp and automatically refreshes list
+// → UI returns to list with updated article visible immediately
 ```
 
 #### Deleting an Article
@@ -1591,21 +1644,23 @@ ArticleView
 // User clicks "Delete" button
 // → Confirmation dialog appears
 // → User confirms deletion
-// → Store deletes article from database
-// → List automatically updates (article removed)
+// → Store deletes article from database and automatically refreshes list
+// → List updates immediately (article removed) without manual refresh
 ```
 
 ### Benefits of Component Architecture
 
 - **No Page Reloads**: Seamless user experience with instant updates
 - **Reusable Components**: Single form handles both create and edit operations
-- **Clean State Management**: Local state eliminates routing complexity
+- **Reactive State Management**: Automatic UI updates through Pinia store with computed properties
 - **Better Performance**: No unnecessary route changes or component re-mounting
 - **Easier Testing**: Components can be tested in isolation
 - **Maintainable Code**: Clear separation of concerns and event-driven communication
 - **Scalable Design**: Easy to add new features or modify existing ones
+- **Automatic Synchronization**: No manual refresh calls needed - store handles all state updates
+- **Consistent User Experience**: Matches BookList reactive pattern for consistency
 
-This admin article management system provides a modern, efficient interface for content management while maintaining clean architecture principles and excellent user experience.
+This admin article management system provides a modern, efficient interface for content management while maintaining clean architecture principles and excellent user experience. The system now follows the same reactive patterns as the BookList component, ensuring consistency across the application and eliminating the need for manual refresh operations.
 
 ## Article Category System
 
