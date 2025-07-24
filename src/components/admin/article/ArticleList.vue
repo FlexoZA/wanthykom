@@ -3,7 +3,7 @@
     <!-- Create New Article Button -->
     <div class="flex justify-end">
       <button
-        @click="$emit('create-article')"
+        @click="$router.push('/admin/articles/create')"
         class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors flex items-center gap-2"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,11 +176,13 @@
 
 <script setup>
 import { onMounted, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
 
-const emit = defineEmits(['create-article', 'view-article', 'edit-article', 'delete-article'])
+const router = useRouter()
+const emit = defineEmits(['delete-article'])
 
 // Dialog state
 const showDeleteDialog = ref(false)
@@ -206,12 +208,12 @@ const formatDate = (dateString) => {
 
 const viewArticle = (articleId) => {
   console.log('DEBUG::AdminArticleList', 'View article:', articleId)
-  emit('view-article', articleId)
+  router.push(`/admin/articles/${articleId}`)
 }
 
 const editArticle = (articleId) => {
   console.log('DEBUG::AdminArticleList', 'Edit article:', articleId)
-  emit('edit-article', articleId)
+  router.push(`/admin/articles/${articleId}/edit`)
 }
 
 const deleteArticle = (articleId) => {

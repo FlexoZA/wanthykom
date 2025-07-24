@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-8">
       <h1 class="text-2xl font-bold text-white">Edit Article</h1>
       <button
-        @click="$emit('cancel')"
+        @click="$router.push('/admin/articles')"
         class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors flex items-center gap-2"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,6 +42,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import AddArticle from '@/components/admin/article/AddArticle.vue'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
@@ -53,8 +54,9 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['article-updated', 'cancel'])
+// Removed emit since we're using router navigation now
 
+const router = useRouter()
 const articleStore = useSupabaseAdminArticleStore()
 const isLoading = ref(true)
 const error = ref(null)
@@ -76,7 +78,8 @@ const fetchArticle = async () => {
 
 const handleArticleUpdated = async () => {
   try {
-    emit('article-updated')
+    console.log('DEBUG::UpdateArticle', 'Article updated successfully')
+    router.push('/admin/articles')
   } catch (err) {
     console.error('DEBUG::UpdateArticle', 'Error refreshing articles:', err)
   }

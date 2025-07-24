@@ -161,7 +161,7 @@
         <button
           v-if="mode === 'create'"
           type="button"
-          @click="$emit('cancel')"
+          @click="$router.push('/admin/articles')"
           :disabled="isSubmitting"
           class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -202,6 +202,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import { useSupabaseAdminArticleCategoryStore } from '@/stores/admin/AdminArticleCategoryStore'
 import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
@@ -219,6 +220,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['article-created', 'article-updated', 'cancel'])
+const router = useRouter()
 const articleStore = useSupabaseAdminArticleStore()
 const categoryStore = useSupabaseAdminArticleCategoryStore()
 const mediaStore = useMediaManagerStore()
@@ -297,7 +299,9 @@ const handleSubmit = async () => {
 
     if (props.mode === 'create') {
       await articleStore.createArticle(formData.value)
-      emit('article-created')
+      // Show success toast and redirect
+      console.log('DEBUG::AddArticle', 'Article created successfully')
+      router.push('/admin/articles')
     } else {
       await articleStore.updateArticle(props.article.id, formData.value)
       emit('article-updated')

@@ -58,7 +58,34 @@ const router = createRouter({
     {
       path: '/admin/articles',
       name: 'admin-articles',
-      component: () => import('@/views/admin/article/ArticlesView.vue'),
+      component: () => import('@/views/admin/article/ArticleListView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/articles/create',
+      name: 'admin-articles-create',
+      component: () => import('@/views/admin/article/ArticleCreateView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/articles/:id',
+      name: 'admin-articles-detail',
+      component: () => import('@/views/admin/article/ArticleDetailView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/articles/:id/edit',
+      name: 'admin-articles-edit',
+      component: () => import('@/views/admin/article/ArticleEditView.vue'),
       meta: {
         layout: 'admin',
         requiresAuth: true,
