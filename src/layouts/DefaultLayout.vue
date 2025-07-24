@@ -6,12 +6,12 @@
     <!-- Main Layout: Content + Sidebar -->
     <div class="flex flex-1 w-full max-w-7xl mx-auto gap-0 md:gap-8 px-2 md:px-8 py-8 relative">
       <!-- Main Content Area -->
-      <MainContent class="flex-1">
+      <MainContent>
         <RouterView />
       </MainContent>
 
       <!-- Vertical Navigation -->
-      <VerticalNav class="hidden md:block" />
+      <VerticalNav />
     </div>
 
     <!-- Footer -->
