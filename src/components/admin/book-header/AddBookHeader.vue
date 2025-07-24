@@ -120,7 +120,7 @@
       <div class="flex justify-end gap-3 pt-4">
         <button
           type="button"
-          @click="$emit('cancel')"
+          @click="handleCancel"
           class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
           Cancel
@@ -139,6 +139,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useSupabaseAdminBookHeaderStore } from '@/stores/admin/AdminBookHeaderStore'
 import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
 
@@ -155,6 +156,8 @@ const props = defineProps({
 
 const emit = defineEmits(['book-header-created', 'book-header-updated', 'cancel'])
 
+const route = useRoute()
+const router = useRouter()
 const bookHeaderStore = useSupabaseAdminBookHeaderStore()
 const mediaStore = useMediaManagerStore()
 const isSubmitting = ref(false)
@@ -199,6 +202,12 @@ const clearError = () => {
   if (errorMessage.value) {
     errorMessage.value = ''
   }
+}
+
+const handleCancel = () => {
+  const bookId = route.params.bookId
+  console.log('DEBUG::AddBookHeader', 'Cancel clicked, navigating back to book headers list')
+  router.push(`/admin/books/${bookId}/headers`)
 }
 
 const handleSubmit = async () => {

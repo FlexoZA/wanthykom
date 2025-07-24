@@ -56,8 +56,6 @@
 </template>
 
 <script setup>
-import { defineEmits, defineProps } from 'vue'
-
 console.log('DEBUG::ConfirmationDialog', 'Component initializing')
 
 const props = defineProps({

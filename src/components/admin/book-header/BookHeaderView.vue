@@ -4,7 +4,7 @@
       <h1 class="text-2xl font-bold text-white">View Book Header</h1>
       <div class="flex gap-2">
         <button
-          @click="$emit('edit-book-header', bookHeaderId)"
+          @click="editBookHeader"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,7 +18,7 @@
           Edit Book Header
         </button>
         <button
-          @click="$emit('back')"
+          @click="goBack"
           class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors flex items-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,6 +103,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useSupabaseAdminBookHeaderStore } from '@/stores/admin/AdminBookHeaderStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 
@@ -113,7 +114,8 @@ const props = defineProps({
   },
 })
 
-defineEmits(['edit-book-header', 'back'])
+const route = useRoute()
+const router = useRouter()
 
 const bookHeaderStore = useSupabaseAdminBookHeaderStore()
 const bookHeader = ref(null)
@@ -128,6 +130,18 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+const editBookHeader = () => {
+  const bookId = route.params.bookId
+  console.log('DEBUG::BookHeaderView', 'Navigating to edit book header:', props.bookHeaderId)
+  router.push(`/admin/books/${bookId}/headers/${props.bookHeaderId}/edit`)
+}
+
+const goBack = () => {
+  const bookId = route.params.bookId
+  console.log('DEBUG::BookHeaderView', 'Navigating back to book headers list')
+  router.push(`/admin/books/${bookId}/headers`)
 }
 
 const loadBookHeader = async () => {

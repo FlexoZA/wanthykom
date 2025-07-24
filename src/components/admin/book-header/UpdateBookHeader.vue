@@ -10,14 +10,15 @@
       v-else
       :book-id="bookId"
       :book-header-id="bookHeaderId"
-      @book-header-updated="$emit('book-header-updated')"
-      @cancel="$emit('cancel')"
+      @book-header-updated="handleBookHeaderUpdated"
+      @cancel="handleCancel"
     />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import AddBookHeader from './AddBookHeader.vue'
 import LoadingAnimation from '../helpers/LoadingAnimation.vue'
 import { useSupabaseAdminBookHeaderStore } from '@/stores/admin/AdminBookHeaderStore'
@@ -35,8 +36,22 @@ const props = defineProps({
 
 defineEmits(['book-header-updated', 'cancel'])
 
+const route = useRoute()
+const router = useRouter()
 const bookHeaderStore = useSupabaseAdminBookHeaderStore()
 const isLoading = ref(true)
+
+const handleBookHeaderUpdated = () => {
+  const bookId = route.params.bookId
+  console.log('DEBUG::UpdateBookHeader', 'Book header updated, navigating back to list')
+  router.push(`/admin/books/${bookId}/headers`)
+}
+
+const handleCancel = () => {
+  const bookId = route.params.bookId
+  console.log('DEBUG::UpdateBookHeader', 'Cancel clicked, navigating back to list')
+  router.push(`/admin/books/${bookId}/headers`)
+}
 
 onMounted(async () => {
   try {

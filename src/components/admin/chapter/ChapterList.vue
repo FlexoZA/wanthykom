@@ -3,7 +3,7 @@
     <!-- Back to Books Button and Create New Chapter Button -->
     <div class="flex justify-between items-center">
       <button
-        @click="$emit('back-to-books')"
+        @click="router.push('/admin/books')"
         class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors flex items-center gap-2"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,7 +17,7 @@
         Back to Books
       </button>
       <button
-        @click="$emit('create-chapter')"
+        @click="router.push(`/admin/books/${bookId}/chapters/create`)"
         class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors flex items-center gap-2"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,6 +181,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSupabaseAdminChapterStore } from '@/stores/admin/AdminChapterStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
@@ -196,7 +197,9 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['back-to-books', 'create-chapter', 'view-chapter', 'edit-chapter', 'delete-chapter'])
+const emit = defineEmits(['delete-chapter'])
+
+const router = useRouter()
 
 // Dialog state
 const showDeleteDialog = ref(false)
@@ -220,12 +223,12 @@ const formatDate = (dateString) => {
 
 const viewChapter = (chapterId) => {
   console.log('DEBUG::ChapterList', 'View chapter:', chapterId)
-  emit('view-chapter', chapterId)
+  router.push(`/admin/books/${props.bookId}/chapters/${chapterId}`)
 }
 
 const editChapter = (chapterId) => {
   console.log('DEBUG::ChapterList', 'Edit chapter:', chapterId)
-  emit('edit-chapter', chapterId)
+  router.push(`/admin/books/${props.bookId}/chapters/${chapterId}/edit`)
 }
 
 const deleteChapter = (chapterId) => {

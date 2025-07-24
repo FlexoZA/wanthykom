@@ -139,7 +139,34 @@ const router = createRouter({
     {
       path: '/admin/books/:bookId/chapters',
       name: 'admin-chapters',
-      component: () => import('@/views/admin/chapter/ChaptersView.vue'),
+      component: () => import('@/views/admin/chapter/ChapterListView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/books/:bookId/chapters/create',
+      name: 'admin-chapters-create',
+      component: () => import('@/views/admin/chapter/ChapterCreateView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/books/:bookId/chapters/:id',
+      name: 'admin-chapters-detail',
+      component: () => import('@/views/admin/chapter/ChapterDetailView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/books/:bookId/chapters/:id/edit',
+      name: 'admin-chapters-edit',
+      component: () => import('@/views/admin/chapter/ChapterEditView.vue'),
       meta: {
         layout: 'admin',
         requiresAuth: true,
@@ -148,7 +175,34 @@ const router = createRouter({
     {
       path: '/admin/books/:bookId/headers',
       name: 'admin-book-headers',
-      component: () => import('@/views/admin/book-header/BookHeadersView.vue'),
+      component: () => import('@/views/admin/book-header/BookHeaderListView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/books/:bookId/headers/create',
+      name: 'admin-book-headers-create',
+      component: () => import('@/views/admin/book-header/BookHeaderCreateView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/books/:bookId/headers/:id',
+      name: 'admin-book-headers-detail',
+      component: () => import('@/views/admin/book-header/BookHeaderDetailView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/books/:bookId/headers/:id/edit',
+      name: 'admin-book-headers-edit',
+      component: () => import('@/views/admin/book-header/BookHeaderEditView.vue'),
       meta: {
         layout: 'admin',
         requiresAuth: true,

@@ -3,7 +3,7 @@
     <!-- Back to Books Button and Create New Book Header Button -->
     <div class="flex justify-between items-center">
       <button
-        @click="$emit('back-to-books')"
+        @click="backToBooks"
         class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors flex items-center gap-2"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,7 +17,7 @@
         Back to Books
       </button>
       <button
-        @click="$emit('create-book-header')"
+        @click="createBookHeader"
         class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors flex items-center gap-2"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,6 +181,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSupabaseAdminBookHeaderStore } from '@/stores/admin/AdminBookHeaderStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
@@ -196,7 +197,9 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['back-to-books', 'create-book-header', 'view-book-header', 'edit-book-header', 'delete-book-header'])
+const emit = defineEmits(['delete-book-header'])
+
+const router = useRouter()
 
 // Dialog state
 const showDeleteDialog = ref(false)
@@ -218,14 +221,24 @@ const formatDate = (dateString) => {
   })
 }
 
+const backToBooks = () => {
+  console.log('DEBUG::BookHeaderList', 'Navigating back to books')
+  router.push('/admin/books')
+}
+
+const createBookHeader = () => {
+  console.log('DEBUG::BookHeaderList', 'Navigating to create book header')
+  router.push(`/admin/books/${props.bookId}/headers/create`)
+}
+
 const viewBookHeader = (bookHeaderId) => {
-  console.log('DEBUG::BookHeaderList', 'View book header:', bookHeaderId)
-  emit('view-book-header', bookHeaderId)
+  console.log('DEBUG::BookHeaderList', 'Navigating to view book header:', bookHeaderId)
+  router.push(`/admin/books/${props.bookId}/headers/${bookHeaderId}`)
 }
 
 const editBookHeader = (bookHeaderId) => {
-  console.log('DEBUG::BookHeaderList', 'Edit book header:', bookHeaderId)
-  emit('edit-book-header', bookHeaderId)
+  console.log('DEBUG::BookHeaderList', 'Navigating to edit book header:', bookHeaderId)
+  router.push(`/admin/books/${props.bookId}/headers/${bookHeaderId}/edit`)
 }
 
 const deleteBookHeader = (bookHeaderId) => {
