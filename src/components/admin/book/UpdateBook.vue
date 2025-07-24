@@ -10,7 +10,7 @@
       v-else
       :book-id="bookId"
       @book-updated="$emit('book-updated')"
-      @cancel="$emit('cancel')"
+      @cancel="$router.push('/admin/books')"
     />
   </div>
 </template>
@@ -28,7 +28,7 @@ const props = defineProps({
   },
 })
 
-defineEmits(['book-updated', 'cancel'])
+defineEmits(['book-updated'])
 
 const bookStore = useSupabaseAdminBookStore()
 const isLoading = ref(true)

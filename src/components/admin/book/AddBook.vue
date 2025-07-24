@@ -99,7 +99,7 @@
       <div class="flex justify-end gap-2">
         <button
           type="button"
-          @click="$emit('cancel')"
+          @click="$router.push('/admin/books')"
           :disabled="isSubmitting"
           class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -150,7 +150,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['book-created', 'book-updated', 'cancel'])
+const emit = defineEmits(['book-created', 'book-updated'])
 
 const bookStore = useSupabaseAdminBookStore()
 const mediaStore = useMediaManagerStore()

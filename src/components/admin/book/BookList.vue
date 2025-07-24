@@ -3,7 +3,7 @@
     <!-- Create New Book Button -->
     <div class="flex justify-end">
       <button
-        @click="$emit('create-book')"
+        @click="$router.push('/admin/books/create')"
         class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors flex items-center gap-2"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,11 +190,14 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSupabaseAdminBookStore } from '@/stores/admin/AdminBookstore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
 
-const emit = defineEmits(['create-book', 'view-book', 'edit-book', 'delete-book', 'manage-chapters', 'manage-headers'])
+const emit = defineEmits(['delete-book'])
+
+const router = useRouter()
 
 // Dialog state
 const showDeleteDialog = ref(false)
@@ -218,22 +221,22 @@ const formatDate = (dateString) => {
 
 const viewBook = (bookId) => {
   console.log('DEBUG::BookList', 'View book:', bookId)
-  emit('view-book', bookId)
+  router.push(`/admin/books/${bookId}`)
 }
 
 const editBook = (bookId) => {
   console.log('DEBUG::BookList', 'Edit book:', bookId)
-  emit('edit-book', bookId)
+  router.push(`/admin/books/${bookId}/edit`)
 }
 
 const manageChapters = (bookId) => {
   console.log('DEBUG::BookList', 'Manage chapters for book:', bookId)
-  emit('manage-chapters', bookId)
+  router.push(`/admin/books/${bookId}/chapters`)
 }
 
 const manageHeaders = (bookId) => {
   console.log('DEBUG::BookList', 'Manage headers for book:', bookId)
-  emit('manage-headers', bookId)
+  router.push(`/admin/books/${bookId}/headers`)
 }
 
 const deleteBook = (bookId) => {

@@ -4,7 +4,7 @@
       <h1 class="text-2xl font-bold text-white">View Book</h1>
       <div class="flex gap-2">
         <button
-          @click="$emit('edit-book', bookId)"
+          @click="$router.push(`/admin/books/${bookId}/edit`)"
           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center gap-2"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,7 +18,7 @@
           Edit Book
         </button>
         <button
-          @click="$emit('back')"
+          @click="$router.push('/admin/books')"
           class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors flex items-center gap-2"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +159,7 @@ const props = defineProps({
   },
 })
 
-defineEmits(['edit-book', 'back'])
+// No emits needed anymore - using router navigation
 
 const bookStore = useSupabaseAdminBookStore()
 const book = ref(null)

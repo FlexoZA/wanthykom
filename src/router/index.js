@@ -94,7 +94,34 @@ const router = createRouter({
     {
       path: '/admin/books',
       name: 'admin-books',
-      component: () => import('@/views/admin/book/BooksView.vue'),
+      component: () => import('@/views/admin/book/BookListView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/books/create',
+      name: 'admin-books-create',
+      component: () => import('@/views/admin/book/BookCreateView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/books/:id',
+      name: 'admin-books-detail',
+      component: () => import('@/views/admin/book/BookDetailView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/books/:id/edit',
+      name: 'admin-books-edit',
+      component: () => import('@/views/admin/book/BookEditView.vue'),
       meta: {
         layout: 'admin',
         requiresAuth: true,
