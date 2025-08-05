@@ -70,13 +70,15 @@
   </template>
 
   <script setup>
-  import { onMounted, computed, watch, ref } from 'vue'
-  import { useRoute } from 'vue-router'
+  import { onMounted, computed, watch, ref, onUnmounted, nextTick } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
   import { useSupabaseBookStore } from '@/stores/web/supabaseBookStore'
 
   const route = useRoute()
+  const router = useRouter()
   const bookStore = useSupabaseBookStore()
   const chapterRefs = ref({})
+  const activeChapter = ref(null)
 
   const books = computed(() => bookStore.getBooks)
   const selectedBook = computed(() => bookStore.getSelectedBook)
@@ -92,9 +94,54 @@
     }
   }
 
+  // Simple scroll-based active chapter detection
+  const updateActiveChapter = () => {
+    if (!selectedBook.value?.chapter) return
+
+    const chapters = selectedBook.value.chapter
+    let activeChapterName = null
+
+    // Get current scroll position
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+
+    // Check each chapter's position (reverse order to find the last one that's passed)
+    for (let i = chapters.length - 1; i >= 0; i--) {
+      const chapter = chapters[i]
+      const chapterEl = chapterRefs.value[chapter.chapter_name]
+
+      if (chapterEl) {
+        const offsetTop = chapterEl.offsetTop - 150 // 150px offset from top
+
+        if (scrollTop >= offsetTop) {
+          activeChapterName = chapter.chapter_name
+          break
+        }
+      }
+    }
+
+    if (activeChapterName && activeChapterName !== activeChapter.value) {
+      activeChapter.value = activeChapterName
+      console.log("DEBUG::BookList", "Active chapter changed to:", activeChapterName)
+
+      // Update URL without triggering navigation
+      const newQuery = { ...route.query, chapter: activeChapterName }
+      router.replace({ query: newQuery })
+    }
+  }
+
+  // Throttled scroll handler
+  let scrollTimeout = null
+  const handleScroll = () => {
+    if (scrollTimeout) {
+      clearTimeout(scrollTimeout)
+    }
+    scrollTimeout = setTimeout(updateActiveChapter, 100)
+  }
+
   // Watch for route changes to scroll to the correct chapter
   watch(() => route.query.chapter, (newChapter) => {
-    if (newChapter) {
+    if (newChapter && newChapter !== activeChapter.value) {
+      activeChapter.value = newChapter
       // Small delay to ensure the DOM is updated
       setTimeout(() => {
         scrollToChapter(newChapter)
@@ -112,6 +159,23 @@
     }
   }, { immediate: true })
 
+  // Watch for selected book changes to setup scroll listener
+  watch(() => selectedBook.value, (newBook) => {
+    // Remove existing scroll listener
+    window.removeEventListener('scroll', handleScroll)
+
+    if (newBook && newBook.chapter) {
+      // Wait for DOM to update, then setup scroll listener
+      nextTick(() => {
+        setTimeout(() => {
+          updateActiveChapter()
+          window.addEventListener('scroll', handleScroll)
+          console.log("DEBUG::BookList", "Scroll listener added")
+        }, 200)
+      })
+    }
+  }, { immediate: true })
+
   onMounted(async () => {
     await bookStore.fetchBooks()
     // If there's a book in the URL query, select it
@@ -120,6 +184,13 @@
       if (book) {
         bookStore.setSelectedBook(book)
       }
+    }
+  })
+
+  onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll)
+    if (scrollTimeout) {
+      clearTimeout(scrollTimeout)
     }
   })
   </script>
