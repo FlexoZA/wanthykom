@@ -4,23 +4,25 @@
       <LoadingAnimation />
     </div>
     <div v-else-if="error" class="text-red-400">Error: {{ error }}</div>
-    <div v-else-if="articles.length === 0" class="text-gray-400 mb-12 text-center py-8">
+    <div v-else-if="articles.length === 0" class="text-gray-400">
       <p>{{ showFeaturedOnly ? 'No featured articles found' : 'No articles found' }}</p>
     </div>
     <div v-else>
-      <div v-for="article in articles" :key="article.id" class="mb-12">
-        <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ article.article_name }}</h2>
-        <!-- Display image if it exists -->
-        <div v-if="article.article_image_url" class="mb-6">
-          <img
-            :src="article.article_image_url"
-            :alt="article.article_name"
-            class="w-full h-64 object-cover rounded-lg"
-          />
-        </div>
+      <div class="mb-12">
+        <div v-for="article in articles" :key="article.id" class="border-t border-gray-700 pt-6 first:border-t-0 first:pt-0">
+          <h2 class="text-2xl font-bold text-gray-100 mb-4">{{ article.article_name }}</h2>
+          <!-- Display image if it exists -->
+          <div v-if="article.article_image_url" class="mb-6">
+            <img
+              :src="article.article_image_url"
+              :alt="article.article_name"
+              class="w-full h-80 object-cover rounded-lg"
+            />
+          </div>
 
-        <div class="prose prose-invert max-w-none">
-          <p class="text-gray-300 whitespace-pre-wrap">{{ article.article_text }}</p>
+          <div class="prose prose-invert max-w-none">
+            <p class="text-gray-300 whitespace-pre-wrap">{{ article.article_text }}</p>
+          </div>
         </div>
       </div>
     </div>

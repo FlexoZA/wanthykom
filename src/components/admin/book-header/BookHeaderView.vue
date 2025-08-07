@@ -67,7 +67,7 @@
         <img
           :src="bookHeader.book_header_image_url"
           :alt="bookHeader.book_header_name"
-          class="w-full h-64 object-cover rounded-lg"
+          class="w-full h-full object-cover rounded-lg"
         />
       </div>
 
