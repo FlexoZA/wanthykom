@@ -173,7 +173,7 @@
             :class="{ 'bg-gray-700': isChapterActive(book.book_name, chapter.chapter_name) }"
             @click="closeMobileMenu"
           >
-            {{ formatNavigationText(chapter.chapter_name) + "..." }}
+            {{ formatNavigationText(chapter.chapter_name) }}
           </RouterLink>
         </div>
       </div>
