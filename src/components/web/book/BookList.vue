@@ -28,7 +28,7 @@
                 <img
                   :src="header.book_header_image_url"
                   :alt="header.book_header_name"
-                  class="w-full h-48 object-cover rounded-lg"
+                  class="w-full h-60 object-cover rounded-lg"
                 />
               </div>
 
@@ -54,7 +54,7 @@
                 <img
                   :src="chapter.book_chapter_image_url"
                   :alt="chapter.chapter_name"
-                  class="w-full h-48 object-cover rounded-lg"
+                  class="w-full h-full object-cover rounded-lg"
                 />
               </div>
 

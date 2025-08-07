@@ -91,7 +91,7 @@
             class="block py-1 px-3 rounded hover:bg-gray-700 transition-colors text-sm"
             :class="{ 'bg-gray-700': isChapterActive(book.book_name, chapter.chapter_name) }"
           >
-            {{ chapter.chapter_name }}
+            {{ formatNavigationText(chapter.chapter_name) }}
           </RouterLink>
         </div>
       </div>
@@ -173,7 +173,7 @@
             :class="{ 'bg-gray-700': isChapterActive(book.book_name, chapter.chapter_name) }"
             @click="closeMobileMenu"
           >
-            {{ chapter.chapter_name }}
+            {{ formatNavigationText(chapter.chapter_name) + "..." }}
           </RouterLink>
         </div>
       </div>
@@ -232,6 +232,23 @@ const closeMobileMenu = () => {
   console.log("DEBUG::VerticalNav", "Closing mobile menu")
   isMobileMenuOpen.value = false
   document.body.style.overflow = ''
+}
+
+// Format text to capitalize only first letter and limit to 18 characters
+const formatNavigationText = (text) => {
+  if (!text) return ''
+
+  // Find the first letter (skip numbers, dots, spaces)
+  const firstLetterIndex = text.search(/[a-zA-Z]/)
+  if (firstLetterIndex === -1) return text // No letters found
+
+  // Keep everything before the first letter as is, capitalize the first letter, lowercase the rest
+  const beforeFirstLetter = text.substring(0, firstLetterIndex)
+  const firstLetter = text.charAt(firstLetterIndex).toUpperCase()
+  const afterFirstLetter = text.substring(firstLetterIndex + 1).toLowerCase()
+
+  const formatted = beforeFirstLetter + firstLetter + afterFirstLetter
+  return formatted.length > 18 ? formatted.substring(0, 18) + "..." : formatted
 }
 
 // Watch for route changes to automatically expand the selected book
