@@ -23,7 +23,7 @@ export const useSupabaseAdminChapterStore = defineStore('supabaseAdminChapter', 
         .from('chapter')
         .select('*')
         .eq('book_id', bookId)
-        .order('created_at', { ascending: false })
+        .order('sort_order', { ascending: true })
 
       if (fetchError) {
         throw fetchError
@@ -50,6 +50,22 @@ export const useSupabaseAdminChapterStore = defineStore('supabaseAdminChapter', 
       error.value = null
       console.log('DEBUG::supabaseAdminChapterStore', 'Creating chapter:', chapterData)
 
+      // Calculate next available sort_order for this book
+      const { data: existingChapters, error: fetchError } = await supabase
+        .from('chapter')
+        .select('sort_order')
+        .eq('book_id', chapterData.book_id)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+
+      if (fetchError) {
+        console.error('DEBUG::supabaseAdminChapterStore', 'Error fetching max sort_order:', fetchError)
+        throw fetchError
+      }
+
+      const nextSortOrder = existingChapters.length > 0 ? (existingChapters[0].sort_order || 0) + 1 : 1
+      console.log('DEBUG::supabaseAdminChapterStore', 'Next sort_order:', nextSortOrder)
+
       const { data: chapterResult, error: createError } = await supabase
         .from('chapter')
         .insert([
@@ -59,6 +75,7 @@ export const useSupabaseAdminChapterStore = defineStore('supabaseAdminChapter', 
             book_id: chapterData.book_id,
             enable: chapterData.enable || true,
             book_chapter_image_url: chapterData.book_chapter_image_url || null,
+            sort_order: nextSortOrder,
           },
         ])
         .select()
@@ -123,6 +140,7 @@ export const useSupabaseAdminChapterStore = defineStore('supabaseAdminChapter', 
         chapter_text: chapterData.chapter_text,
         enable: chapterData.enable,
         book_chapter_image_url: chapterData.book_chapter_image_url || null,
+        sort_order: chapterData.sort_order,
         updated_at: new Date().toISOString(),
       }
 
@@ -178,6 +196,47 @@ export const useSupabaseAdminChapterStore = defineStore('supabaseAdminChapter', 
     }
   }
 
+  const reorderChapters = async (bookId, reorderedChapters) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      console.log('DEBUG::supabaseAdminChapterStore', 'Reordering chapters:', { bookId, reorderedChapters })
+
+      // Update sort_order for each chapter in batch
+      const updates = reorderedChapters.map((chapter, index) => ({
+        id: chapter.id,
+        sort_order: index + 1
+      }))
+
+      console.log('DEBUG::supabaseAdminChapterStore', 'Batch updates:', updates)
+
+      // Execute batch updates
+      for (const update of updates) {
+        const { error: updateError } = await supabase
+          .from('chapter')
+          .update({ sort_order: update.sort_order })
+          .eq('id', update.id)
+
+        if (updateError) {
+          console.error('DEBUG::supabaseAdminChapterStore', 'Error updating chapter sort_order:', updateError)
+          throw updateError
+        }
+      }
+
+      console.log('DEBUG::supabaseAdminChapterStore', 'Chapters reordered successfully')
+
+      // Refresh the chapters list
+      await fetchChapters(bookId)
+      return true
+    } catch (err) {
+      console.error('DEBUG::supabaseAdminChapterStore', 'Error reordering chapters:', err)
+      error.value = err.message
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     fetchChapters,
     getChapters,
@@ -187,5 +246,6 @@ export const useSupabaseAdminChapterStore = defineStore('supabaseAdminChapter', 
     fetchChapter,
     updateChapter,
     deleteChapter,
+    reorderChapters,
   }
 })

@@ -23,7 +23,7 @@ export const useSupabaseAdminBookHeaderStore = defineStore('supabaseAdminBookHea
         .from('book_header')
         .select('*')
         .eq('book_id', bookId)
-        .order('created_at', { ascending: false })
+        .order('sort_order', { ascending: true })
 
       if (fetchError) {
         throw fetchError
@@ -50,6 +50,22 @@ export const useSupabaseAdminBookHeaderStore = defineStore('supabaseAdminBookHea
       error.value = null
       console.log('DEBUG::supabaseAdminBookHeaderStore', 'Creating book header:', bookHeaderData)
 
+      // Calculate next available sort_order for this book
+      const { data: existingBookHeaders, error: fetchError } = await supabase
+        .from('book_header')
+        .select('sort_order')
+        .eq('book_id', bookHeaderData.book_id)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+
+      if (fetchError) {
+        console.error('DEBUG::supabaseAdminBookHeaderStore', 'Error fetching max sort_order:', fetchError)
+        throw fetchError
+      }
+
+      const nextSortOrder = existingBookHeaders.length > 0 ? (existingBookHeaders[0].sort_order || 0) + 1 : 1
+      console.log('DEBUG::supabaseAdminBookHeaderStore', 'Next sort_order:', nextSortOrder)
+
       const { data: bookHeaderResult, error: createError } = await supabase
         .from('book_header')
         .insert([
@@ -59,6 +75,7 @@ export const useSupabaseAdminBookHeaderStore = defineStore('supabaseAdminBookHea
             book_id: bookHeaderData.book_id,
             enable: bookHeaderData.enable || true,
             book_header_image_url: bookHeaderData.book_header_image_url || null,
+            sort_order: nextSortOrder,
           },
         ])
         .select()
@@ -123,6 +140,7 @@ export const useSupabaseAdminBookHeaderStore = defineStore('supabaseAdminBookHea
         book_header_text: bookHeaderData.book_header_text,
         enable: bookHeaderData.enable,
         book_header_image_url: bookHeaderData.book_header_image_url || null,
+        sort_order: bookHeaderData.sort_order,
         // Remove updated_at - let database handle it automatically or via trigger
       }
 
@@ -178,6 +196,47 @@ export const useSupabaseAdminBookHeaderStore = defineStore('supabaseAdminBookHea
     }
   }
 
+  const reorderBookHeaders = async (bookId, reorderedBookHeaders) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      console.log('DEBUG::supabaseAdminBookHeaderStore', 'Reordering book headers:', { bookId, reorderedBookHeaders })
+
+      // Update sort_order for each book header in batch
+      const updates = reorderedBookHeaders.map((bookHeader, index) => ({
+        id: bookHeader.id,
+        sort_order: index + 1
+      }))
+
+      console.log('DEBUG::supabaseAdminBookHeaderStore', 'Batch updates:', updates)
+
+      // Execute batch updates
+      for (const update of updates) {
+        const { error: updateError } = await supabase
+          .from('book_header')
+          .update({ sort_order: update.sort_order })
+          .eq('id', update.id)
+
+        if (updateError) {
+          console.error('DEBUG::supabaseAdminBookHeaderStore', 'Error updating book header sort_order:', updateError)
+          throw updateError
+        }
+      }
+
+      console.log('DEBUG::supabaseAdminBookHeaderStore', 'Book headers reordered successfully')
+
+      // Refresh the book headers list
+      await fetchBookHeaders(bookId)
+      return true
+    } catch (err) {
+      console.error('DEBUG::supabaseAdminBookHeaderStore', 'Error reordering book headers:', err)
+      error.value = err.message
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     fetchBookHeaders,
     getBookHeaders,
@@ -187,5 +246,6 @@ export const useSupabaseAdminBookHeaderStore = defineStore('supabaseAdminBookHea
     fetchBookHeader,
     updateBookHeader,
     deleteBookHeader,
+    reorderBookHeaders,
   }
 })

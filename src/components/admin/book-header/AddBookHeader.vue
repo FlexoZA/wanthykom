@@ -83,6 +83,22 @@
         </div>
       </div>
 
+      <!-- Sort Order -->
+      <div>
+        <label class="block text-white font-medium mb-2">Sort Order</label>
+        <input
+          v-model.number="formData.sort_order"
+          type="number"
+          min="1"
+          @input="clearError"
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="Enter sort order (optional - will auto-assign if empty)"
+        />
+        <p class="text-xs text-gray-400 mt-1">
+          Leave empty to automatically assign the next available sort order. Lower numbers appear first.
+        </p>
+      </div>
+
       <!-- Book Header Title with Character Counter -->
       <div>
         <label class="block text-white font-medium mb-2">Book Header Title</label>
@@ -168,6 +184,7 @@ const formData = ref({
   book_header_image_url: '',
   book_header_name: '',
   book_header_text: '',
+  sort_order: null,
 })
 
 const mode = computed(() => (props.bookHeaderId ? 'edit' : 'create'))

@@ -141,6 +141,33 @@
               </div>
             </div>
 
+            <!-- Sort Order Controls -->
+            <div class="flex items-center justify-end mb-3">
+              <div class="flex items-center gap-2">
+                <button
+                  @click="moveBookHeaderUp(bookHeader)"
+                  :disabled="isFirstBookHeader(bookHeader)"
+                  class="p-1 text-gray-400 hover:text-white hover:bg-gray-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Move up"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                  </svg>
+                </button>
+                <button
+                  @click="moveBookHeaderDown(bookHeader)"
+                  :disabled="isLastBookHeader(bookHeader)"
+                  class="p-1 text-gray-400 hover:text-white hover:bg-gray-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Move down"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <span class="px-2 py-1 bg-blue-600 text-white text-sm rounded">{{ bookHeader.sort_order || 'N/A' }}</span>
+              </div>
+            </div>
+
             <!-- Action Buttons -->
             <div class="flex justify-between items-center">
               <div class="flex gap-2">
@@ -260,6 +287,57 @@ const cancelDelete = () => {
   console.log('DEBUG::BookHeaderList', 'Cancelled delete')
   showDeleteDialog.value = false
   bookHeaderToDelete.value = null
+}
+
+// Sort order functions
+const isFirstBookHeader = (bookHeader) => {
+  const sortedBookHeaders = [...bookHeaders.value].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+  return sortedBookHeaders[0]?.id === bookHeader.id
+}
+
+const isLastBookHeader = (bookHeader) => {
+  const sortedBookHeaders = [...bookHeaders.value].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+  return sortedBookHeaders[sortedBookHeaders.length - 1]?.id === bookHeader.id
+}
+
+const moveBookHeaderUp = async (bookHeader) => {
+  console.log('DEBUG::BookHeaderList', 'Moving book header up:', bookHeader.id)
+  try {
+    const sortedBookHeaders = [...bookHeaders.value].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    const currentIndex = sortedBookHeaders.findIndex(bh => bh.id === bookHeader.id)
+
+    if (currentIndex > 0) {
+      // Swap with previous book header
+      const temp = sortedBookHeaders[currentIndex - 1]
+      sortedBookHeaders[currentIndex - 1] = sortedBookHeaders[currentIndex]
+      sortedBookHeaders[currentIndex] = temp
+
+      // Use reorderBookHeaders function
+      await bookHeaderStore.reorderBookHeaders(props.bookId, sortedBookHeaders)
+    }
+  } catch (error) {
+    console.error('DEBUG::BookHeaderList', 'Error moving book header up:', error)
+  }
+}
+
+const moveBookHeaderDown = async (bookHeader) => {
+  console.log('DEBUG::BookHeaderList', 'Moving book header down:', bookHeader.id)
+  try {
+    const sortedBookHeaders = [...bookHeaders.value].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    const currentIndex = sortedBookHeaders.findIndex(bh => bh.id === bookHeader.id)
+
+    if (currentIndex < sortedBookHeaders.length - 1) {
+      // Swap with next book header
+      const temp = sortedBookHeaders[currentIndex + 1]
+      sortedBookHeaders[currentIndex + 1] = sortedBookHeaders[currentIndex]
+      sortedBookHeaders[currentIndex] = temp
+
+      // Use reorderBookHeaders function
+      await bookHeaderStore.reorderBookHeaders(props.bookId, sortedBookHeaders)
+    }
+  } catch (error) {
+    console.error('DEBUG::BookHeaderList', 'Error moving book header down:', error)
+  }
 }
 
 // Watch for bookId changes to fetch book headers

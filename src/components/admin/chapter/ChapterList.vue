@@ -141,6 +141,33 @@
               </div>
             </div>
 
+            <!-- Sort Order Controls -->
+            <div class="flex items-center justify-end mb-3">
+              <div class="flex items-center gap-2">
+                <button
+                  @click="moveChapterUp(chapter)"
+                  :disabled="isFirstChapter(chapter)"
+                  class="p-1 text-gray-400 hover:text-white hover:bg-gray-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Move up"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                  </svg>
+                </button>
+                <button
+                  @click="moveChapterDown(chapter)"
+                  :disabled="isLastChapter(chapter)"
+                  class="p-1 text-gray-400 hover:text-white hover:bg-gray-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Move down"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <span class="px-2 py-1 bg-blue-600 text-white text-sm rounded">{{ chapter.sort_order || 'N/A' }}</span>
+              </div>
+            </div>
+
             <!-- Action Buttons -->
             <div class="flex justify-between items-center">
               <div class="flex gap-2">
@@ -250,6 +277,57 @@ const cancelDelete = () => {
   console.log('DEBUG::ChapterList', 'Cancelled delete')
   showDeleteDialog.value = false
   chapterToDelete.value = null
+}
+
+// Sort order functions
+const isFirstChapter = (chapter) => {
+  const sortedChapters = [...chapters.value].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+  return sortedChapters[0]?.id === chapter.id
+}
+
+const isLastChapter = (chapter) => {
+  const sortedChapters = [...chapters.value].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+  return sortedChapters[sortedChapters.length - 1]?.id === chapter.id
+}
+
+const moveChapterUp = async (chapter) => {
+  console.log('DEBUG::ChapterList', 'Moving chapter up:', chapter.id)
+  try {
+    const sortedChapters = [...chapters.value].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    const currentIndex = sortedChapters.findIndex(c => c.id === chapter.id)
+
+    if (currentIndex > 0) {
+      // Swap with previous chapter
+      const temp = sortedChapters[currentIndex - 1]
+      sortedChapters[currentIndex - 1] = sortedChapters[currentIndex]
+      sortedChapters[currentIndex] = temp
+
+      // Use reorderChapters function
+      await chapterStore.reorderChapters(props.bookId, sortedChapters)
+    }
+  } catch (error) {
+    console.error('DEBUG::ChapterList', 'Error moving chapter up:', error)
+  }
+}
+
+const moveChapterDown = async (chapter) => {
+  console.log('DEBUG::ChapterList', 'Moving chapter down:', chapter.id)
+  try {
+    const sortedChapters = [...chapters.value].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    const currentIndex = sortedChapters.findIndex(c => c.id === chapter.id)
+
+    if (currentIndex < sortedChapters.length - 1) {
+      // Swap with next chapter
+      const temp = sortedChapters[currentIndex + 1]
+      sortedChapters[currentIndex + 1] = sortedChapters[currentIndex]
+      sortedChapters[currentIndex] = temp
+
+      // Use reorderChapters function
+      await chapterStore.reorderChapters(props.bookId, sortedChapters)
+    }
+  } catch (error) {
+    console.error('DEBUG::ChapterList', 'Error moving chapter down:', error)
+  }
 }
 
 // Watch for bookId changes to fetch chapters

@@ -21,23 +21,26 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
           book_name,
           book_image_url,
           created_at,
+          sort_order,
           enable,
           book_header (
             id,
             book_header_name,
-            book_header_text
+            book_header_text,
+            sort_order
           ),
           chapter (
             id,
             chapter_name,
             chapter_text,
             created_at,
+            sort_order,
             enable,
             book_chapter_image_url
           )
         `,
         )
-        .order('created_at', { ascending: false })
+        .order('sort_order', { ascending: true })
 
       if (fetchError) {
         throw fetchError
@@ -107,17 +110,20 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
           book_name,
           book_image_url,
           created_at,
+          sort_order,
           enable,
           book_header (
             id,
             book_header_name,
-            book_header_text
+            book_header_text,
+            sort_order
           ),
           chapter (
             id,
             chapter_name,
             chapter_text,
             created_at,
+            sort_order,
             enable,
             book_chapter_image_url
           )
