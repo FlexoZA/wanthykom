@@ -12,7 +12,9 @@
 
     <div class="absolute inset-0 flex items-center">
       <div class="flex-1 max-w-6xl mx-auto px-8">
-        <h1 class="text-3xl md:text-5xl font-bold mb-2">Want hy kom</h1>
+        <router-link to="/" class="block">
+          <h1 class="text-3xl md:text-5xl font-bold mb-2 hover:text-blue-300 transition-colors">Want hy kom</h1>
+        </router-link>
         <h2 class="text-lg md:text-2xl font-light opacity-80">Jennifer Schoeman</h2>
       </div>
     </div>
@@ -26,8 +28,6 @@ import { useUnsplashImageStore } from '@/stores/web/unsplashImageStore'
 const imageStore = useUnsplashImageStore()
 
 onMounted(async () => {
-  console.log('Header mounted, fetching image...')
   await imageStore.fetchRandomImage()
-  console.log('Current image after fetch:', imageStore.currentImage)
 })
 </script>

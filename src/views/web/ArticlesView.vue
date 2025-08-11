@@ -1,6 +1,6 @@
 <template>
   <div class="relative">
-    <ArticleList :show-featured-only="false" :category-id="categoryId" />
+    <ArticleList :show-featured-only="false" :category-id="categoryId" :show-latest-article="false" />
   </div>
 </template>
 

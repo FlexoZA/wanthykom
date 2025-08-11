@@ -8,6 +8,10 @@ let isAuthInitialized = false
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    return { left: 0, top: 0 }
+  },
   routes: [
     {
       path: '/',
@@ -21,6 +25,14 @@ const router = createRouter({
       path: '/articles',
       name: 'articles',
       component: () => import('@/views/web/ArticlesView.vue'),
+      meta: {
+        layout: 'default',
+      },
+    },
+    {
+      path: '/articles/:id',
+      name: 'article-detail',
+      component: () => import('@/views/web/ArticleDetailView.vue'),
       meta: {
         layout: 'default',
       },
@@ -226,7 +238,6 @@ router.beforeEach(async (to, from, next) => {
 
   // If route requires auth and user is not logged in, redirect to login
   if (requiresAuth && !currentUser) {
-    console.log('DEBUG::Router', 'Auth required, redirecting to login')
     next({ name: 'login' })
     return
   }

@@ -54,10 +54,7 @@ export const useSupabaseBookStore = defineStore('supabaseBook', {
           )
           .order('sort_order', { ascending: true })
 
-        if (error) {
-          console.error('DEBUG::supabaseBookStore', 'Error fetching Books:', error)
-          throw error
-        }
+        if (error) throw error
 
         // Set the books data, filter enabled items, and sort chapters and headers by sort_order
         this.books = data.map(book => ({
@@ -68,9 +65,7 @@ export const useSupabaseBookStore = defineStore('supabaseBook', {
             .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)) || []
         }))
 
-        console.log('DEBUG::supabaseBookStore', 'Fetched books with images:', this.books)
       } catch (error) {
-        console.error('DEBUG::supabaseBookStore', 'Failed to fetch books:', error)
         this.error = error.message
       } finally {
         this.isLoading = false

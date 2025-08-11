@@ -1,6 +1,8 @@
 <template>
     <div class="space-y-8">
-      <div v-if="isLoading" class="text-gray-400">Loading Books...</div>
+      <div v-if="isLoading" class="flex items-center justify-center py-12">
+        <LoadingAnimation />
+      </div>
       <div v-else-if="error" class="text-red-400">Error: {{ error }}</div>
       <div v-else-if="!selectedBook" class="text-gray-400">Select a book from the navigation</div>
       <div v-else>
@@ -73,6 +75,7 @@
   import { onMounted, computed, watch, ref, onUnmounted, nextTick } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useSupabaseBookStore } from '@/stores/web/supabaseBookStore'
+  import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 
   const route = useRoute()
   const router = useRouter()
@@ -121,7 +124,6 @@
 
     if (activeChapterName && activeChapterName !== activeChapter.value) {
       activeChapter.value = activeChapterName
-      console.log("DEBUG::BookList", "Active chapter changed to:", activeChapterName)
 
       // Update URL without triggering navigation
       const newQuery = { ...route.query, chapter: activeChapterName }
@@ -170,7 +172,6 @@
         setTimeout(() => {
           updateActiveChapter()
           window.addEventListener('scroll', handleScroll)
-          console.log("DEBUG::BookList", "Scroll listener added")
         }, 200)
       })
     }
