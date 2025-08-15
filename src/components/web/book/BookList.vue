@@ -88,7 +88,8 @@
   const chapterRefs = ref({})
   const activeChapter = ref(null)
   const isFading = ref(false)
-  let hasPerformedInitialChapterScroll = false
+  // Removed usage of deep-link branch tracking; keeping fade for all chapter changes
+  const suppressInitialChapterDetection = ref(false)
 
   const books = computed(() => bookStore.getBooks)
   const selectedBook = computed(() => bookStore.getSelectedBook)
@@ -152,25 +153,24 @@
   watch(() => route.query.chapter, (newChapter) => {
     if (newChapter && newChapter !== activeChapter.value) {
       activeChapter.value = newChapter
-      // If this is the first deep-link load, the interval-based handler will do a hidden jump
-      if (hasPerformedInitialChapterScroll) {
-        // Fade out, jump instantly, fade in for side-menu (or any subsequent) chapter changes
-        const targetEl = chapterRefs.value[newChapter]
-        if (targetEl) {
-          isFading.value = true
-          setTimeout(() => {
-            targetEl.scrollIntoView({ behavior: 'auto', block: 'start' })
-            setTimeout(() => {
-              isFading.value = false
-            }, 150)
-          }, 150)
-        } else {
-          // Fallback: small delay then attempt smooth scroll via helper
-          setTimeout(() => {
-            scrollToChapter(newChapter)
-          }, 100)
-        }
+      // If a deep-link interval is in progress, let it handle the initial jump
+      if (initialChapterScrollInterval) {
+        return
       }
+      // Always use fade-out → instant jump → fade-in for chapter changes
+      const targetEl = chapterRefs.value[newChapter]
+      isFading.value = true
+      setTimeout(() => {
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'auto', block: 'start' })
+        } else {
+          // Fallback if element not yet ready
+          scrollToChapter(newChapter)
+        }
+        setTimeout(() => {
+          isFading.value = false
+        }, 150)
+      }, 150)
     }
   }, { immediate: true })
 
@@ -180,6 +180,17 @@
       const book = books.value.find(b => b.book_name === newBookName)
       if (book) {
         bookStore.setSelectedBook(book)
+        // If a stale chapter is present in the URL when switching books, clear it
+        if (typeof route.query.chapter !== 'undefined') {
+          router.replace({ query: { book: newBookName } })
+        }
+        // If there is no chapter in the URL, ensure we start at the top
+        if (typeof route.query.chapter === 'undefined') {
+          suppressInitialChapterDetection.value = true
+          setTimeout(() => {
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+          }, 0)
+        }
       }
     }
   }, { immediate: true })
@@ -213,7 +224,6 @@
                   isFading.value = false
                 }, 150)
               }, 150)
-              hasPerformedInitialChapterScroll = true
               clearInterval(initialChapterScrollInterval)
               initialChapterScrollInterval = null
             } else if (attempts >= maxAttempts) {
@@ -223,8 +233,14 @@
           }, 100)
         }
         setTimeout(() => {
-          updateActiveChapter()
-          window.addEventListener('scroll', handleScroll)
+          if (suppressInitialChapterDetection.value) {
+            suppressInitialChapterDetection.value = false
+            // Do not auto-detect chapter on the first book click without chapter; keep at top
+            window.addEventListener('scroll', handleScroll)
+          } else {
+            updateActiveChapter()
+            window.addEventListener('scroll', handleScroll)
+          }
         }, 200)
       })
     }
