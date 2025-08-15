@@ -1,5 +1,10 @@
 <template>
     <div class="space-y-8">
+      <!-- Fade overlay for initial deep-link scroll (prevents visible jump) -->
+      <div
+        class="fixed inset-0 z-50 bg-gray-900 transition-opacity duration-300"
+        :class="{ 'opacity-0 pointer-events-none': !isFading, 'opacity-80': isFading }"
+      ></div>
       <div v-if="isLoading" class="flex items-center justify-center py-12">
         <LoadingAnimation />
       </div>
@@ -82,6 +87,8 @@
   const bookStore = useSupabaseBookStore()
   const chapterRefs = ref({})
   const activeChapter = ref(null)
+  const isFading = ref(false)
+  let hasPerformedInitialChapterScroll = false
 
   const books = computed(() => bookStore.getBooks)
   const selectedBook = computed(() => bookStore.getSelectedBook)
@@ -133,6 +140,7 @@
 
   // Throttled scroll handler
   let scrollTimeout = null
+  let initialChapterScrollInterval = null
   const handleScroll = () => {
     if (scrollTimeout) {
       clearTimeout(scrollTimeout)
@@ -144,10 +152,25 @@
   watch(() => route.query.chapter, (newChapter) => {
     if (newChapter && newChapter !== activeChapter.value) {
       activeChapter.value = newChapter
-      // Small delay to ensure the DOM is updated
-      setTimeout(() => {
-        scrollToChapter(newChapter)
-      }, 100)
+      // If this is the first deep-link load, the interval-based handler will do a hidden jump
+      if (hasPerformedInitialChapterScroll) {
+        // Fade out, jump instantly, fade in for side-menu (or any subsequent) chapter changes
+        const targetEl = chapterRefs.value[newChapter]
+        if (targetEl) {
+          isFading.value = true
+          setTimeout(() => {
+            targetEl.scrollIntoView({ behavior: 'auto', block: 'start' })
+            setTimeout(() => {
+              isFading.value = false
+            }, 150)
+          }, 150)
+        } else {
+          // Fallback: small delay then attempt smooth scroll via helper
+          setTimeout(() => {
+            scrollToChapter(newChapter)
+          }, 100)
+        }
+      }
     }
   }, { immediate: true })
 
@@ -169,6 +192,36 @@
     if (newBook && newBook.chapter) {
       // Wait for DOM to update, then setup scroll listener
       nextTick(() => {
+        // Retry scrolling to the chapter on first load until refs are ready
+        if (route.query.chapter) {
+          let attempts = 0
+          const maxAttempts = 30 // ~3s at 100ms
+          // Clear any previous interval just in case
+          if (initialChapterScrollInterval) {
+            clearInterval(initialChapterScrollInterval)
+            initialChapterScrollInterval = null
+          }
+          initialChapterScrollInterval = setInterval(() => {
+            attempts++
+            const targetRef = chapterRefs.value[route.query.chapter]
+            if (targetRef) {
+              // Fade out, jump instantly, fade in
+              isFading.value = true
+              setTimeout(() => {
+                targetRef.scrollIntoView({ behavior: 'auto', block: 'start' })
+                setTimeout(() => {
+                  isFading.value = false
+                }, 150)
+              }, 150)
+              hasPerformedInitialChapterScroll = true
+              clearInterval(initialChapterScrollInterval)
+              initialChapterScrollInterval = null
+            } else if (attempts >= maxAttempts) {
+              clearInterval(initialChapterScrollInterval)
+              initialChapterScrollInterval = null
+            }
+          }, 100)
+        }
         setTimeout(() => {
           updateActiveChapter()
           window.addEventListener('scroll', handleScroll)
@@ -192,6 +245,10 @@
     window.removeEventListener('scroll', handleScroll)
     if (scrollTimeout) {
       clearTimeout(scrollTimeout)
+    }
+    if (initialChapterScrollInterval) {
+      clearInterval(initialChapterScrollInterval)
+      initialChapterScrollInterval = null
     }
   })
   </script>

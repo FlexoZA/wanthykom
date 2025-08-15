@@ -12,6 +12,14 @@ const router = createRouter({
     if (savedPosition) return savedPosition
     // Prevent scroll-to-top on query-only navigations (e.g., chapter updates while scrolling)
     if (to.path === from.path && to.fullPath !== from.fullPath) {
+      // Special case: when switching books from the main menu on the books page, go to top
+      const isBooksPage = to.name === 'books'
+      const bookChanged = to.query.book !== from.query.book
+      const chapterPresent = typeof to.query.chapter !== 'undefined'
+      if (isBooksPage && bookChanged && !chapterPresent) {
+        return { left: 0, top: 0 }
+      }
+      // Otherwise, keep position (e.g., chapter query updates)
       return false
     }
     return { left: 0, top: 0 }
@@ -55,6 +63,7 @@ const router = createRouter({
       component: () => import('@/views/web/BookView.vue'),
       meta: {
         layout: 'default',
+        showInactivityRefresh: true,
       },
     },
     {
