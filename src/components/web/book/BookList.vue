@@ -1,9 +1,9 @@
 <template>
-    <div class="space-y-8">
+    <div class="relative space-y-8">
       <!-- Fade overlay for initial deep-link scroll (prevents visible jump) -->
       <div
-        class="fixed inset-0 z-50 bg-gray-900 transition-opacity duration-300"
-        :class="{ 'opacity-0 pointer-events-none': !isFading, 'opacity-80': isFading }"
+        class="absolute inset-0 z-50 bg-gray-900 transition-opacity duration-300"
+        :class="{ 'opacity-0 pointer-events-none': !isFading, 'opacity-40': isFading }"
       ></div>
       <div v-if="isLoading" class="flex items-center justify-center py-12">
         <LoadingAnimation />
