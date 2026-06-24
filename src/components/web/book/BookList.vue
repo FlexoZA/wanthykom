@@ -40,9 +40,7 @@
               </div>
 
               <!-- Header Text -->
-              <div class="prose prose-invert max-w-none">
-                <p class="text-gray-300 whitespace-pre-wrap">{{ header.book_header_text }}</p>
-              </div>
+              <div class="rich-content text-gray-300" v-html="sanitizeHtml(header.book_header_text)"></div>
             </div>
           </div>
 
@@ -66,9 +64,7 @@
               </div>
 
               <!-- Chapter Text -->
-              <div class="prose prose-invert max-w-none">
-                <p class="text-gray-300 whitespace-pre-wrap">{{ chapter.chapter_text }}</p>
-              </div>
+              <div class="rich-content text-gray-300" v-html="sanitizeHtml(chapter.chapter_text)"></div>
             </div>
           </div>
         </div>
@@ -82,6 +78,7 @@
   import { useSupabaseBookStore } from '@/stores/web/supabaseBookStore'
   import { useLanguageStore } from '@/stores/languageStore'
   import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
+  import { sanitizeHtml } from '@/utils/html'
 
   const route = useRoute()
   const router = useRouter()

@@ -162,14 +162,12 @@
       <!-- Article Text -->
       <div>
         <label class="block text-white mb-2">Article Text</label>
-        <textarea
+        <RichTextEditor
           v-model="formData.article_text"
-          required
-          rows="10"
           :disabled="isSubmitting"
-          class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+          :save-status="autosave.status.value"
           placeholder="Enter article content"
-        ></textarea>
+        />
       </div>
 
       <!-- Submit Button -->
@@ -223,6 +221,8 @@ import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import { useSupabaseAdminArticleCategoryStore } from '@/stores/admin/AdminArticleCategoryStore'
 import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
 import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from '@/i18n/messages'
+import RichTextEditor from '@/components/admin/editor/RichTextEditor.vue'
+import { useAutosave } from '@/composables/useAutosave'
 
 const props = defineProps({
   article: {
@@ -277,6 +277,16 @@ const selectedImage = computed(() => {
 const selectedImageUrl = computed(() => formData.value.article_image_url || '')
 const selectedImageName = computed(() => selectedImage.value?.name || '')
 
+// Autosave: persist to DB while editing; stash a local draft while creating.
+const autosave = useAutosave(formData, {
+  enabled: props.mode === 'edit',
+  save: (data) =>
+    props.mode === 'edit'
+      ? articleStore.updateArticle(props.article.id, data)
+      : Promise.resolve(),
+  draftKey: props.mode === 'create' ? 'draft:article:create' : null,
+})
+
 // Update selected image when dropdown changes
 const updateSelectedImage = () => {
   // Image preview will update automatically through computed properties
@@ -324,6 +334,14 @@ onMounted(async () => {
       article_text: props.article.article_text,
       language: props.article.language || 'af',
     }
+  } else if (props.mode === 'create') {
+    // Restore an unsaved draft from a previous session, if any.
+    const draft = autosave.loadDraft()
+    if (draft && window.confirm('Restore your unsaved draft for this article?')) {
+      formData.value = { ...formData.value, ...draft }
+    } else if (draft) {
+      autosave.clearDraft()
+    }
   }
 })
 
@@ -333,6 +351,7 @@ const handleSubmit = async () => {
 
     if (props.mode === 'create') {
       await articleStore.createArticle(formData.value)
+      autosave.clearDraft()
       // Show success toast and redirect
       console.log('DEBUG::AddArticle', 'Article created successfully')
       router.push('/admin/articles')

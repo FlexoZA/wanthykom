@@ -68,9 +68,7 @@
             class="bg-gray-700 rounded-lg p-4"
           >
             <h4 class="text-lg font-semibold text-gray-200 mb-2">{{ header.book_header_name }}</h4>
-            <div class="prose prose-invert max-w-none">
-              <p class="text-gray-300 whitespace-pre-wrap">{{ header.book_header_text }}</p>
-            </div>
+            <div class="rich-content text-gray-300" v-html="sanitizeHtml(header.book_header_text)"></div>
           </div>
         </div>
       </div>
@@ -98,9 +96,7 @@
             </div>
 
             <!-- Chapter Content -->
-            <div class="prose prose-invert max-w-none">
-              <p class="text-gray-300 whitespace-pre-wrap">{{ chapter.chapter_text }}</p>
-            </div>
+            <div class="rich-content text-gray-300" v-html="sanitizeHtml(chapter.chapter_text)"></div>
 
             <!-- Chapter Date -->
             <div class="mt-3 text-xs text-gray-500">
@@ -151,6 +147,7 @@
 import { ref, onMounted } from 'vue'
 import { useSupabaseAdminBookStore } from '@/stores/admin/AdminBookstore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
+import { sanitizeHtml } from '@/utils/html'
 
 const props = defineProps({
   bookId: {

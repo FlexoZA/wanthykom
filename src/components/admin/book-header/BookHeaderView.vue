@@ -75,9 +75,7 @@
       <h2 class="text-3xl font-bold text-white mb-6">{{ bookHeader.book_header_name }}</h2>
 
       <!-- Book Header Content -->
-      <div class="prose prose-invert max-w-none mb-8">
-        <p class="text-gray-300 whitespace-pre-wrap">{{ bookHeader.book_header_text }}</p>
-      </div>
+      <div class="rich-content text-gray-300 mb-8" v-html="sanitizeHtml(bookHeader.book_header_text)"></div>
 
       <!-- Book Header Metadata -->
       <div class="mt-8 pt-6 border-t border-gray-700 text-sm text-gray-400">
@@ -106,6 +104,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSupabaseAdminBookHeaderStore } from '@/stores/admin/AdminBookHeaderStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
+import { sanitizeHtml } from '@/utils/html'
 
 const props = defineProps({
   bookHeaderId: {

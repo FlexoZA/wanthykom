@@ -122,14 +122,13 @@
       <!-- Book Header Content -->
       <div>
         <label class="block text-white font-medium mb-2">Book Header Content</label>
-        <textarea
+        <RichTextEditor
           v-model="formData.book_header_text"
-          required
-          rows="12"
-          @input="clearError"
-          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+          :disabled="isSubmitting"
+          :save-status="autosave.status.value"
           placeholder="Enter book header content..."
-        ></textarea>
+          @update:model-value="clearError"
+        />
       </div>
 
       <!-- Form Actions -->
@@ -158,6 +157,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSupabaseAdminBookHeaderStore } from '@/stores/admin/AdminBookHeaderStore'
 import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
+import RichTextEditor from '@/components/admin/editor/RichTextEditor.vue'
+import { useAutosave } from '@/composables/useAutosave'
 
 const props = defineProps({
   bookId: {
@@ -188,6 +189,20 @@ const formData = ref({
 })
 
 const mode = computed(() => (props.bookHeaderId ? 'edit' : 'create'))
+
+// Autosave: persist to DB while editing; stash a local draft while creating.
+const autosave = useAutosave(formData, {
+  enabled: mode.value === 'edit',
+  save: (data) =>
+    mode.value === 'edit'
+      ? bookHeaderStore.updateBookHeader(props.bookHeaderId, {
+          ...data,
+          book_id: props.bookId,
+        })
+      : Promise.resolve(),
+  draftKey:
+    mode.value === 'create' ? `draft:book-header:create:${props.bookId}` : null,
+})
 
 // Get available images from media store
 const availableImages = computed(() => mediaStore.getImages)
@@ -244,6 +259,7 @@ const handleSubmit = async () => {
 
     if (mode.value === 'create') {
       await bookHeaderStore.createBookHeader(bookHeaderData)
+      autosave.clearDraft()
       console.log('DEBUG::AddBookHeader', 'Book header created successfully')
       emit('book-header-created')
     } else {
@@ -291,6 +307,14 @@ onMounted(async () => {
       } else {
         console.warn('DEBUG::AddBookHeader', 'No book header data found for ID:', props.bookHeaderId)
         errorMessage.value = 'Book header not found'
+      }
+    } else {
+      // Create mode: offer to restore an unsaved draft.
+      const draft = autosave.loadDraft()
+      if (draft && window.confirm('Restore your unsaved draft for this book header?')) {
+        formData.value = { ...formData.value, ...draft }
+      } else if (draft) {
+        autosave.clearDraft()
       }
     }
   } catch (error) {

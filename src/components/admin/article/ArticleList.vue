@@ -123,8 +123,7 @@
             </div>
 
             <p class="text-gray-400 text-sm mb-3 line-clamp-2">
-              {{ article.article_text.substring(0, 120)
-              }}{{ article.article_text.length > 120 ? '...' : '' }}
+              {{ htmlPreview(article.article_text, 120) }}
             </p>
 
             <!-- Dates -->
@@ -180,6 +179,7 @@ import { useRouter } from 'vue-router'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
+import { htmlPreview } from '@/utils/html'
 
 const router = useRouter()
 const emit = defineEmits(['delete-article'])

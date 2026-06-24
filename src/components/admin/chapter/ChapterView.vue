@@ -75,9 +75,7 @@
       <h2 class="text-3xl font-bold text-white mb-6">{{ chapter.chapter_name }}</h2>
 
       <!-- Chapter Content -->
-      <div class="prose prose-invert max-w-none mb-8">
-        <p class="text-gray-300 whitespace-pre-wrap">{{ chapter.chapter_text }}</p>
-      </div>
+      <div class="rich-content text-gray-300 mb-8" v-html="sanitizeHtml(chapter.chapter_text)"></div>
 
       <!-- Chapter Metadata -->
       <div class="mt-8 pt-6 border-t border-gray-700 text-sm text-gray-400">
@@ -105,6 +103,7 @@
 import { ref, onMounted } from 'vue'
 import { useSupabaseAdminChapterStore } from '@/stores/admin/AdminChapterStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
+import { sanitizeHtml } from '@/utils/html'
 
 const props = defineProps({
   chapterId: {

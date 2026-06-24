@@ -129,7 +129,7 @@
             <!-- Book Header Preview -->
             <div class="text-sm text-gray-400 mb-3">
               <p class="line-clamp-2">
-                {{ bookHeader.book_header_text ? bookHeader.book_header_text.substring(0, 120) + '...' : 'No content' }}
+                {{ bookHeader.book_header_text ? htmlPreview(bookHeader.book_header_text, 120) : 'No content' }}
               </p>
             </div>
 
@@ -212,6 +212,7 @@ import { useRouter } from 'vue-router'
 import { useSupabaseAdminBookHeaderStore } from '@/stores/admin/AdminBookHeaderStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
+import { htmlPreview } from '@/utils/html'
 
 const props = defineProps({
   bookId: {

@@ -123,14 +123,13 @@
       <!-- Chapter Content -->
       <div>
         <label class="block text-white font-medium mb-2">Chapter Content</label>
-        <textarea
+        <RichTextEditor
           v-model="formData.chapter_text"
-          required
-          rows="12"
-          @input="clearError"
-          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+          :disabled="isSubmitting"
+          :save-status="autosave.status.value"
           placeholder="Enter chapter content..."
-        ></textarea>
+          @update:model-value="clearError"
+        />
       </div>
 
       <!-- Form Actions -->
@@ -158,6 +157,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useSupabaseAdminChapterStore } from '@/stores/admin/AdminChapterStore'
 import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
+import RichTextEditor from '@/components/admin/editor/RichTextEditor.vue'
+import { useAutosave } from '@/composables/useAutosave'
 
 const props = defineProps({
   bookId: {
@@ -186,6 +187,20 @@ const formData = ref({
 })
 
 const mode = computed(() => (props.chapterId ? 'edit' : 'create'))
+
+// Autosave: persist to DB while editing; stash a local draft while creating.
+const autosave = useAutosave(formData, {
+  enabled: mode.value === 'edit',
+  save: (data) =>
+    mode.value === 'edit'
+      ? chapterStore.updateChapter(props.chapterId, {
+          ...data,
+          book_id: props.bookId,
+        })
+      : Promise.resolve(),
+  draftKey:
+    mode.value === 'create' ? `draft:chapter:create:${props.bookId}` : null,
+})
 
 // Get available images from media store
 const availableImages = computed(() => mediaStore.getImages)
@@ -236,6 +251,7 @@ const handleSubmit = async () => {
 
     if (mode.value === 'create') {
       await chapterStore.createChapter(chapterData)
+      autosave.clearDraft()
       console.log('DEBUG::AddChapter', 'Chapter created successfully')
       emit('chapter-created')
     } else {
@@ -283,6 +299,14 @@ onMounted(async () => {
       } else {
         console.warn('DEBUG::AddChapter', 'No chapter data found for ID:', props.chapterId)
         errorMessage.value = 'Chapter not found'
+      }
+    } else {
+      // Create mode: offer to restore an unsaved draft.
+      const draft = autosave.loadDraft()
+      if (draft && window.confirm('Restore your unsaved draft for this chapter?')) {
+        formData.value = { ...formData.value, ...draft }
+      } else if (draft) {
+        autosave.clearDraft()
       }
     }
   } catch (error) {

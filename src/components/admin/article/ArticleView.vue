@@ -91,9 +91,7 @@
       <h2 class="text-3xl font-bold text-white mb-4">{{ article.article_name }}</h2>
 
       <!-- Article Text -->
-      <div class="prose prose-invert max-w-none">
-        <p class="text-gray-300 whitespace-pre-wrap">{{ article.article_text }}</p>
-      </div>
+      <div class="rich-content text-gray-300" v-html="sanitizeHtml(article.article_text)"></div>
 
       <!-- Dates -->
       <div class="mt-8 pt-6 border-t border-gray-700 text-sm text-gray-400">
@@ -111,6 +109,7 @@
 import { ref, watch } from 'vue'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
+import { sanitizeHtml } from '@/utils/html'
 
 const props = defineProps({
   articleId: {

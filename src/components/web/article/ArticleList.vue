@@ -22,7 +22,7 @@
             </div>
             <div :class="{ 'md:w-2/3': latestArticle.article_image_url, 'w-full': !latestArticle.article_image_url }">
               <h2 class="text-2xl font-bold text-gray-100 mb-2">{{ latestArticle.article_name }}</h2>
-              <p class="text-gray-300 line-clamp-3 mb-4">{{ latestArticle.article_text }}</p>
+              <p class="text-gray-300 line-clamp-3 mb-4">{{ stripHtml(latestArticle.article_text) }}</p>
               <router-link
                 :to="{ name: 'article-detail', params: { id: latestArticle.id } }"
                 class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -53,9 +53,7 @@
             />
           </div>
 
-          <div class="prose prose-invert max-w-none">
-            <p class="text-gray-300 whitespace-pre-wrap">{{ article.article_text }}</p>
-          </div>
+          <div class="rich-content text-gray-300" v-html="sanitizeHtml(article.article_text)"></div>
         </div>
       </div>
     </div>
@@ -67,6 +65,7 @@ import { onMounted, computed, watch } from 'vue'
 import { useSupabaseArticleStore } from '@/stores/web/supabaseArticleStore'
 import { useLanguageStore } from '@/stores/languageStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
+import { sanitizeHtml, stripHtml } from '@/utils/html'
 
 const languageStore = useLanguageStore()
 

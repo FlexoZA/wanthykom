@@ -1,1 +1,94 @@
 @import 'tailwindcss';
+
+/* Shared typography for WYSIWYG editor content and rendered HTML (v-html).
+   Tailwind's preflight resets headings/lists, so rich text needs explicit styles. */
+.rich-content {
+  line-height: 1.7;
+  word-break: break-word;
+}
+.rich-content :where(p) {
+  margin: 0 0 1rem;
+}
+.rich-content :where(p):last-child {
+  margin-bottom: 0;
+}
+.rich-content :where(h1) {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 1.5rem 0 0.75rem;
+}
+.rich-content :where(h2) {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 1.25rem 0 0.5rem;
+}
+.rich-content :where(h3) {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 1rem 0 0.5rem;
+}
+.rich-content :where(ul, ol) {
+  margin: 0 0 1rem;
+  padding-left: 1.5rem;
+}
+.rich-content :where(ul) {
+  list-style: disc;
+}
+.rich-content :where(ol) {
+  list-style: decimal;
+}
+.rich-content :where(li) {
+  margin: 0.25rem 0;
+}
+.rich-content :where(li) > :where(ul, ol) {
+  margin: 0.25rem 0;
+}
+.rich-content :where(blockquote) {
+  border-left: 3px solid #4b5563;
+  padding-left: 1rem;
+  margin: 0 0 1rem;
+  font-style: italic;
+  color: #9ca3af;
+}
+.rich-content :where(a) {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+.rich-content :where(strong) {
+  font-weight: 700;
+}
+.rich-content :where(code) {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
+.rich-content :where(pre) {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  margin: 0 0 1rem;
+}
+.rich-content :where(hr) {
+  border: 0;
+  border-top: 1px solid #4b5563;
+  margin: 1.5rem 0;
+}
+
+/* TipTap editable area */
+.rich-content .ProseMirror {
+  outline: none;
+  min-height: inherit;
+}
+/* Placeholder text when the editor is empty */
+.rich-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}

@@ -129,7 +129,7 @@
             <!-- Chapter Preview -->
             <div class="text-sm text-gray-400 mb-3">
               <p class="line-clamp-2">
-                {{ chapter.chapter_text ? chapter.chapter_text.substring(0, 120) + '...' : 'No content' }}
+                {{ chapter.chapter_text ? htmlPreview(chapter.chapter_text, 120) : 'No content' }}
               </p>
             </div>
 
@@ -212,6 +212,7 @@ import { useRouter } from 'vue-router'
 import { useSupabaseAdminChapterStore } from '@/stores/admin/AdminChapterStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
+import { htmlPreview } from '@/utils/html'
 
 const props = defineProps({
   bookId: {
