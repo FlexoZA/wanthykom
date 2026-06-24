@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { supabase } from '@/lib/supabase'
+import { useLanguageStore } from '@/stores/languageStore'
 
 export const useSupabaseBookStore = defineStore('supabaseBook', {
   state: () => ({
@@ -26,6 +27,8 @@ export const useSupabaseBookStore = defineStore('supabaseBook', {
       this.error = null
 
       try {
+        const language = useLanguageStore().currentLanguage
+
         const { data, error } = await supabase
           .from('book')
           .select(
@@ -52,6 +55,7 @@ export const useSupabaseBookStore = defineStore('supabaseBook', {
             )
           `,
           )
+          .eq('language', language)
           .order('sort_order', { ascending: true })
 
         if (error) throw error

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { supabase } from '@/lib/supabase'
+import { useLanguageStore } from '@/stores/languageStore'
 
 export const useSupabaseArticleCategoryStore = defineStore('supabaseArticleCategory', {
   state: () => ({
@@ -21,6 +22,8 @@ export const useSupabaseArticleCategoryStore = defineStore('supabaseArticleCateg
       this.error = null
 
       try {
+        const language = useLanguageStore().currentLanguage
+
         const { data, error } = await supabase
           .from('article_catagory')
           .select(
@@ -31,10 +34,13 @@ export const useSupabaseArticleCategoryStore = defineStore('supabaseArticleCateg
               id,
               article_name,
               article_featured,
-              enable
+              enable,
+              language
             )
           `,
           )
+          .eq('language', language)
+          .eq('article.language', language)
           .order('catagory_name', { ascending: true })
 
         console.log('DEBUG::supabaseArticleCategoryStore', 'Categories query result:', data)

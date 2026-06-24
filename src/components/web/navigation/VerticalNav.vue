@@ -38,13 +38,16 @@
 
   <!-- Desktop Navigation Menu -->
   <nav class="hidden md:flex flex-col gap-2 py-8 px-4 bg-gray-800 text-gray-200 w-56 min-w-[12rem] border-l border-gray-700 sticky top-0 h-[calc(100vh-4rem)] overflow-y-auto">
+    <!-- Language Switch -->
+    <LanguageSwitch class="mb-6 pb-4 border-b border-gray-700" />
+
     <!-- Back to landing page -->
     <RouterLink
       to="/"
       class="py-2 px-3 rounded hover:bg-gray-700 transition-colors mb-4 font-semibold"
       active-class="bg-gray-700"
     >
-      Voorwoord
+      {{ languageStore.t('foreword') }}
     </RouterLink>
 
     <!-- Article Categories as Main Menu Items -->
@@ -105,7 +108,7 @@
   >
     <!-- Mobile Menu Header -->
     <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-700">
-      <h2 class="text-lg font-semibold">Menu</h2>
+      <h2 class="text-lg font-semibold">{{ languageStore.t('menu') }}</h2>
       <button
         @click="closeMobileMenu"
         class="p-1 hover:bg-gray-700 rounded"
@@ -117,6 +120,9 @@
       </button>
     </div>
 
+    <!-- Language Switch -->
+    <LanguageSwitch class="mb-6 pb-4 border-b border-gray-700" />
+
     <!-- Back to landing page -->
     <RouterLink
       to="/"
@@ -124,7 +130,7 @@
       active-class="bg-gray-700"
       @click="closeMobileMenu"
     >
-      Voorwoord
+      {{ languageStore.t('foreword') }}
     </RouterLink>
 
     <!-- Article Categories as Main Menu Items -->
@@ -186,10 +192,13 @@ import { RouterLink, useRoute } from 'vue-router'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useSupabaseBookStore } from '@/stores/web/supabaseBookStore'
 import { useSupabaseArticleCategoryStore } from '@/stores/web/supabaseArticleCategoryStore'
+import { useLanguageStore } from '@/stores/languageStore'
+import LanguageSwitch from '@/components/web/navigation/LanguageSwitch.vue'
 
 const route = useRoute()
 const bookStore = useSupabaseBookStore()
 const categoryStore = useSupabaseArticleCategoryStore()
+const languageStore = useLanguageStore()
 const books = computed(() => bookStore.getBooks)
 const categories = computed(() => categoryStore.getCategories)
 const expandedBooks = ref({})
@@ -273,6 +282,14 @@ watch(() => route.query.book, (newBook) => {
 // Close mobile menu when route changes
 watch(() => route.path, () => {
   closeMobileMenu()
+})
+
+// Re-fetch navigation content when the language changes
+watch(() => languageStore.currentLanguage, async () => {
+  await Promise.all([
+    bookStore.fetchBooks(),
+    categoryStore.fetchCategoriesWithArticles(),
+  ])
 })
 
 // Close mobile menu on window resize to desktop size

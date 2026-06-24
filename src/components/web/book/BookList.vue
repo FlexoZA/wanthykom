@@ -8,8 +8,8 @@
       <div v-if="isLoading" class="flex items-center justify-center py-12">
         <LoadingAnimation />
       </div>
-      <div v-else-if="error" class="text-red-400">Error: {{ error }}</div>
-      <div v-else-if="!selectedBook" class="text-gray-400">Select a book from the navigation</div>
+      <div v-else-if="error" class="text-red-400">{{ languageStore.t('errorPrefix') }}: {{ error }}</div>
+      <div v-else-if="!selectedBook" class="text-gray-400">{{ languageStore.t('selectBook') }}</div>
       <div v-else>
         <div class="mb-12">
           <!-- Book Title -->
@@ -80,11 +80,13 @@
   import { onMounted, computed, watch, ref, onUnmounted, nextTick } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useSupabaseBookStore } from '@/stores/web/supabaseBookStore'
+  import { useLanguageStore } from '@/stores/languageStore'
   import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 
   const route = useRoute()
   const router = useRouter()
   const bookStore = useSupabaseBookStore()
+  const languageStore = useLanguageStore()
   const chapterRefs = ref({})
   const activeChapter = ref(null)
   const isFading = ref(false)
@@ -253,6 +255,25 @@
       const book = books.value.find(b => b.book_name === route.query.book)
       if (book) {
         bookStore.setSelectedBook(book)
+      }
+    }
+  })
+
+  // Re-fetch books when the language changes. Books in different languages are
+  // separate rows with their own names, so re-select the current book by name if
+  // a match exists; otherwise clear the selection and the stale book query.
+  watch(() => languageStore.currentLanguage, async () => {
+    await bookStore.fetchBooks()
+    const currentName = route.query.book
+    const match = currentName && books.value
+      ? books.value.find(b => b.book_name === currentName)
+      : null
+    if (match) {
+      bookStore.setSelectedBook(match)
+    } else {
+      bookStore.setSelectedBook(null)
+      if (typeof route.query.book !== 'undefined') {
+        router.replace({ query: {} })
       }
     }
   })

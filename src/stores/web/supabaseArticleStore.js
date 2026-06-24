@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { supabase } from '@/lib/supabase'
+import { useLanguageStore } from '@/stores/languageStore'
 
 export const useSupabaseArticleStore = defineStore('supabaseArticle', {
   state: () => ({
@@ -20,6 +21,8 @@ export const useSupabaseArticleStore = defineStore('supabaseArticle', {
       this.error = null
 
       try {
+        const language = useLanguageStore().currentLanguage
+
         const { data, error } = await supabase
           .from('article')
           .select(
@@ -30,6 +33,7 @@ export const useSupabaseArticleStore = defineStore('supabaseArticle', {
             article_image_url,
             article_featured,
             enable,
+            language,
             created_at,
             article_catagory_id,
             article_catagory (
@@ -39,6 +43,7 @@ export const useSupabaseArticleStore = defineStore('supabaseArticle', {
           `,
           )
           .eq('enable', true)
+          .eq('language', language)
           .order('created_at', { ascending: false })
 
         if (error) throw error

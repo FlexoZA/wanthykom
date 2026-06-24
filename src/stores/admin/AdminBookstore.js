@@ -23,6 +23,7 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
           created_at,
           sort_order,
           enable,
+          language,
           book_header (
             id,
             book_header_name,
@@ -73,6 +74,7 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
             book_name: bookData.book_name,
             enable: bookData.enable || false,
             book_image_url: bookData.book_image_url || null,
+            language: bookData.language || 'af',
           },
         ])
         .select()
@@ -112,6 +114,7 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
           created_at,
           sort_order,
           enable,
+          language,
           book_header (
             id,
             book_header_name,
@@ -160,6 +163,7 @@ export const useSupabaseAdminBookStore = defineStore('supabaseAdminBook', () => 
         book_name: bookData.book_name,
         enable: bookData.enable,
         book_image_url: bookData.book_image_url || null,
+        language: bookData.language || 'af',
       }
 
       console.log('DEBUG::supabaseAdminBookStore', 'Update payload:', updatePayload)

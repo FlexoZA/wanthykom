@@ -15,6 +15,9 @@ coverage
 *.local
 *.env
 
+# Local database backups / data exports
+backups/
+
 /cypress/videos/
 /cypress/screenshots/
 

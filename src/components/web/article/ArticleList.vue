@@ -3,14 +3,14 @@
     <div v-if="isLoading" class="flex items-center justify-center py-12">
       <LoadingAnimation />
     </div>
-    <div v-else-if="error" class="text-red-400">Error: {{ error }}</div>
+    <div v-else-if="error" class="text-red-400">{{ languageStore.t('errorPrefix') }}: {{ error }}</div>
     <div v-else-if="articles.length === 0" class="text-gray-400">
-      <p>{{ showFeaturedOnly ? 'No featured articles found' : 'No articles found' }}</p>
+      <p>{{ showFeaturedOnly ? languageStore.t('noFeaturedArticles') : languageStore.t('noArticles') }}</p>
     </div>
         <div v-else>
       <!-- Latest Article Block -->
       <template v-if="showLatestArticle">
-        <h2 class="text-2xl font-bold text-gray-100 mb-2">Wat is nuut</h2>
+        <h2 class="text-2xl font-bold text-gray-100 mb-2">{{ languageStore.t('whatsNew') }}</h2>
         <div v-if="latestArticle" class="bg-gray-800 rounded-lg p-6 mb-8">
           <div class="flex flex-col md:flex-row gap-6">
             <div v-if="latestArticle.article_image_url" class="md:w-1/3">
@@ -27,7 +27,7 @@
                 :to="{ name: 'article-detail', params: { id: latestArticle.id } }"
                 class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
-                Lees meer
+                {{ languageStore.t('readMore') }}
               </router-link>
             </div>
         </div>
@@ -65,7 +65,10 @@
 <script setup>
 import { onMounted, computed, watch } from 'vue'
 import { useSupabaseArticleStore } from '@/stores/web/supabaseArticleStore'
+import { useLanguageStore } from '@/stores/languageStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
+
+const languageStore = useLanguageStore()
 
 const props = defineProps({
   showFeaturedOnly: {
@@ -118,6 +121,11 @@ const fetchArticles = async () => {
 
 // Watch for category changes
 watch(() => props.categoryId, () => {
+  fetchArticles()
+})
+
+// Re-fetch when the language changes
+watch(() => languageStore.currentLanguage, () => {
   fetchArticles()
 })
 

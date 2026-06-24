@@ -43,6 +43,22 @@
         </button>
       </div>
 
+      <!-- Language Selection -->
+      <div>
+        <label class="block text-white mb-2">Language</label>
+        <select
+          v-model="formData.language"
+          class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-blue-500"
+        >
+          <option v-for="lang in SUPPORTED_LANGUAGES" :key="lang" :value="lang">
+            {{ LANGUAGE_LABELS[lang] }}
+          </option>
+        </select>
+        <p class="text-sm text-gray-400 mt-1">
+          The language readers must select to see this article.
+        </p>
+      </div>
+
       <!-- Article Category Selection -->
       <div>
         <label class="block text-white mb-2">Article Category</label>
@@ -201,11 +217,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import { useSupabaseAdminArticleCategoryStore } from '@/stores/admin/AdminArticleCategoryStore'
 import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
+import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from '@/i18n/messages'
 
 const props = defineProps({
   article: {
@@ -237,10 +254,16 @@ const formData = ref({
   article_image_url: '',
   article_name: '',
   article_text: '',
+  language: 'af',
 })
 
-// Get available categories from local state
-const availableCategories = computed(() => categories.value)
+// Only offer categories that belong to the selected language so an article is
+// never linked to a category from another language.
+const availableCategories = computed(() =>
+  categories.value.filter(
+    (category) => (category.language || 'af') === formData.value.language,
+  ),
+)
 
 // Get available images from media store
 const availableImages = computed(() => mediaStore.getImages)
@@ -258,6 +281,16 @@ const selectedImageName = computed(() => selectedImage.value?.name || '')
 const updateSelectedImage = () => {
   // Image preview will update automatically through computed properties
 }
+
+// If the selected category no longer belongs to the chosen language, clear it.
+watch(() => formData.value.language, () => {
+  const stillValid = availableCategories.value.some(
+    (category) => category.id === formData.value.article_catagory_id,
+  )
+  if (!stillValid) {
+    formData.value.article_catagory_id = null
+  }
+})
 
 // Fetch categories
 const fetchCategories = async () => {
@@ -289,6 +322,7 @@ onMounted(async () => {
       article_image_url: props.article.article_image_url || '',
       article_name: props.article.article_name,
       article_text: props.article.article_text,
+      language: props.article.language || 'af',
     }
   }
 })

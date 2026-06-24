@@ -82,6 +82,22 @@
         </div>
       </div>
 
+      <!-- Language Selection -->
+      <div>
+        <label class="block text-white mb-2">Language</label>
+        <select
+          v-model="formData.language"
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option v-for="lang in SUPPORTED_LANGUAGES" :key="lang" :value="lang">
+            {{ LANGUAGE_LABELS[lang] }}
+          </option>
+        </select>
+        <p class="text-sm text-gray-400 mt-1">
+          The language readers must select to see this book. Its chapters and headers inherit this language.
+        </p>
+      </div>
+
       <!-- Book Name -->
       <div>
         <label class="block text-white mb-2">Book Name</label>
@@ -142,6 +158,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useSupabaseAdminBookStore } from '@/stores/admin/AdminBookstore'
 import { useMediaManagerStore } from '@/stores/admin/mediaManagerStore'
+import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from '@/i18n/messages'
 
 const props = defineProps({
   bookId: {
@@ -160,6 +177,7 @@ const formData = ref({
   enable: false,
   book_image_url: '',
   book_name: '',
+  language: 'af',
 })
 
 const mode = computed(() => (props.bookId ? 'edit' : 'create'))
@@ -206,6 +224,7 @@ const handleSubmit = async () => {
       enable: false,
       book_image_url: '',
       book_name: '',
+      language: 'af',
     }
   } catch (error) {
     console.error('DEBUG::AddBook', 'Error submitting form:', error)
@@ -230,6 +249,7 @@ onMounted(async () => {
           enable: book.enable || false,
           book_image_url: book.book_image_url || '',
           book_name: book.book_name || '',
+          language: book.language || 'af',
         }
         console.log('DEBUG::AddBook', 'Book data loaded:', formData.value)
       }

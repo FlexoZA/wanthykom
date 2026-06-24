@@ -1,5 +1,14 @@
 <script setup>
 // No props needed - using dynamic layout system
+import { onMounted } from 'vue'
+import { useLanguageStore } from '@/stores/languageStore'
+
+const languageStore = useLanguageStore()
+
+// Reflect the active language on the root <html> element for accessibility/SEO.
+onMounted(() => {
+  document.documentElement.setAttribute('lang', languageStore.currentLanguage)
+})
 </script>
 
 <template>

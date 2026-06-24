@@ -27,7 +27,7 @@
         class="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white shadow-lg border border-blue-400/50"
         @click="reloadPage"
       >
-        Refresh to get the latest content
+        {{ languageStore.t('refreshContent') }}
       </button>
     </div>
   </div>
@@ -40,6 +40,9 @@ import TopHeader from '@/components/web/header/TopHeader.vue'
 import VerticalNav from '@/components/web/navigation/VerticalNav.vue'
 import MainContent from '@/components/MainContent.vue'
 import AppFooter from '@/components/web/footer/AppFooter.vue'
+import { useLanguageStore } from '@/stores/languageStore'
+
+const languageStore = useLanguageStore()
 
 // Inactivity detection (memory-only, no storage)
 const route = useRoute()

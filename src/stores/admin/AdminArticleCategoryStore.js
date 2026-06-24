@@ -26,6 +26,7 @@ export const useSupabaseAdminArticleCategoryStore = () => {
         .insert([
           {
             catagory_name: categoryData.catagory_name,
+            language: categoryData.language || 'af',
           },
         ])
         .select()
@@ -66,6 +67,7 @@ export const useSupabaseAdminArticleCategoryStore = () => {
         .from('article_catagory')
         .update({
           catagory_name: categoryData.catagory_name,
+          ...(categoryData.language ? { language: categoryData.language } : {}),
         })
         .eq('id', categoryId)
 
