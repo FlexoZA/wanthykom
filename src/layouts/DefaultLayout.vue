@@ -14,6 +14,9 @@
       <VerticalNav />
     </div>
 
+    <!-- Reader bookmarks (selection popover + drawer + persistent highlights) -->
+    <BookmarkManager v-if="shouldShowForRoute" />
+
     <!-- Footer -->
     <AppFooter />
 
@@ -40,6 +43,7 @@ import TopHeader from '@/components/web/header/TopHeader.vue'
 import VerticalNav from '@/components/web/navigation/VerticalNav.vue'
 import MainContent from '@/components/MainContent.vue'
 import AppFooter from '@/components/web/footer/AppFooter.vue'
+import BookmarkManager from '@/components/web/bookmark/BookmarkManager.vue'
 import { useLanguageStore } from '@/stores/languageStore'
 
 const languageStore = useLanguageStore()

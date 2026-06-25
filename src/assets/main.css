@@ -5,6 +5,9 @@
 .rich-content {
   line-height: 1.7;
   word-break: break-word;
+  /* Preserve newline paragraph breaks in plain-text content (older chapters
+     were stored as plain text). Compact WYSIWYG HTML is unaffected. */
+  white-space: pre-wrap;
 }
 .rich-content :where(p) {
   margin: 0 0 1rem;
@@ -77,6 +80,30 @@
   border: 0;
   border-top: 1px solid #4b5563;
   margin: 1.5rem 0;
+}
+
+/* Initial text-selection colour (previews the bookmark colour before you save). */
+::selection {
+  background-color: #d97706;
+  color: #fff;
+}
+::-moz-selection {
+  background-color: #d97706;
+  color: #fff;
+}
+
+/* Reader bookmark highlights — CSS Custom Highlight API and <mark> fallback.
+   Kept readable on the dark content background. */
+::highlight(wanthykom-bookmark) {
+  background-color: rgba(245, 191, 66, 0.38);
+  color: #fff;
+  border-radius: 2px;
+}
+mark.wk-bookmark {
+  background-color: rgba(245, 191, 66, 0.38);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
 }
 
 /* TipTap editable area */

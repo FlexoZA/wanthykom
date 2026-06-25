@@ -15,25 +15,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ChapterView from '@/components/admin/chapter/ChapterView.vue'
 
 const route = useRoute()
 const router = useRouter()
-const chapterId = ref(null)
-const bookId = ref(null)
 
-// Navigation is now handled directly in ChapterView component
+// Derive IDs synchronously from the route so the child <ChapterView> receives
+// the correct id on its initial mount (otherwise its first fetch runs with null).
+const chapterId = computed(() => route.params.id)
+const bookId = computed(() => route.params.bookId)
 
 onMounted(() => {
-  // Get IDs from route params
-  chapterId.value = route.params.id
-  bookId.value = route.params.bookId
   console.log('DEBUG::ChapterDetailView', 'Mounted with chapterId:', chapterId.value, 'bookId:', bookId.value)
-
   if (!chapterId.value || !bookId.value) {
-    // If missing params, redirect to books
     console.log('DEBUG::ChapterDetailView', 'Missing required params, redirecting to books')
     router.push('/admin/books')
   }
