@@ -76,6 +76,7 @@ export const useSupabaseAdminChapterStore = defineStore('supabaseAdminChapter', 
             enable: chapterData.enable || true,
             book_chapter_image_url: chapterData.book_chapter_image_url || null,
             sort_order: nextSortOrder,
+            slug: chapterData.slug || null,
           },
         ])
         .select()
@@ -141,6 +142,7 @@ export const useSupabaseAdminChapterStore = defineStore('supabaseAdminChapter', 
         enable: chapterData.enable,
         book_chapter_image_url: chapterData.book_chapter_image_url || null,
         sort_order: chapterData.sort_order,
+        slug: chapterData.slug || null,
         updated_at: new Date().toISOString(),
       }
 

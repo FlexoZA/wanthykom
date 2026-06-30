@@ -111,6 +111,22 @@
         />
       </div>
 
+      <!-- Slug (cross-language link) -->
+      <div>
+        <label class="block text-white mb-2">Slug</label>
+        <input
+          v-model="formData.slug"
+          type="text"
+          :disabled="isSubmitting"
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="e.g. part1"
+        />
+        <p class="text-sm text-gray-400 mt-1">
+          Links this book to its translations. Use the <strong>same slug</strong> on
+          the matching book in each language (e.g. “part1” on both Deel 1 and Part 1).
+        </p>
+      </div>
+
       <!-- Form Actions -->
       <div class="flex justify-end gap-2">
         <button
@@ -178,6 +194,7 @@ const formData = ref({
   book_image_url: '',
   book_name: '',
   language: 'af',
+  slug: '',
 })
 
 const mode = computed(() => (props.bookId ? 'edit' : 'create'))
@@ -250,6 +267,7 @@ onMounted(async () => {
           book_image_url: book.book_image_url || '',
           book_name: book.book_name || '',
           language: book.language || 'af',
+          slug: book.slug || '',
         }
         console.log('DEBUG::AddBook', 'Book data loaded:', formData.value)
       }

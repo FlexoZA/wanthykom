@@ -10,6 +10,18 @@ export const LANGUAGE_LABELS = {
   en: 'English',
 }
 
+// Cross-language article-category equivalents (by catagory_name). Categories are
+// separate DB rows per language with different ids, so this lets the UI jump to
+// the matching category when the visitor switches language on a category page.
+export const CATEGORY_TRANSLATIONS = {
+  'Drome en Gesigte': 'Dreams and Visions',
+  'Dreams and Visions': 'Drome en Gesigte',
+  Tuis: 'Home',
+  Home: 'Tuis',
+  Getuienisse: 'Testimonies',
+  Testimonies: 'Getuienisse',
+}
+
 export const messages = {
   af: {
     siteTitle: 'Want hy kom',

@@ -120,6 +120,22 @@
         </p>
       </div>
 
+      <!-- Slug (cross-language link) -->
+      <div>
+        <label class="block text-white font-medium mb-2">Slug</label>
+        <input
+          v-model="formData.slug"
+          type="text"
+          @input="clearError"
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="e.g. part1-2"
+        />
+        <p class="text-xs text-gray-400 mt-1">
+          Links this chapter to its translations. Use the <strong>same slug</strong> on
+          the matching chapter in each language (e.g. “part1-2”).
+        </p>
+      </div>
+
       <!-- Chapter Content -->
       <div>
         <label class="block text-white font-medium mb-2">Chapter Content</label>
@@ -184,6 +200,7 @@ const formData = ref({
   chapter_name: '',
   chapter_text: '',
   sort_order: null,
+  slug: '',
 })
 
 const mode = computed(() => (props.chapterId ? 'edit' : 'create'))
@@ -267,6 +284,7 @@ const handleSubmit = async () => {
         book_chapter_image_url: '',
         chapter_name: '',
         chapter_text: '',
+        slug: '',
       }
     }
   } catch (error) {
@@ -294,6 +312,7 @@ onMounted(async () => {
           book_chapter_image_url: chapter.book_chapter_image_url || '',
           chapter_name: chapter.chapter_name || '',
           chapter_text: chapter.chapter_text || '',
+          slug: chapter.slug || '',
         }
         console.log('DEBUG::AddChapter', 'Chapter data loaded:', formData.value)
       } else {

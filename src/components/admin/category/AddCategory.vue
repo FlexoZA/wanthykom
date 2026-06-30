@@ -40,6 +40,22 @@
         </p>
       </div>
 
+      <!-- Slug (cross-language link) -->
+      <div>
+        <label class="block text-white font-medium mb-2">Slug</label>
+        <input
+          v-model="formData.slug"
+          type="text"
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="e.g. dreams"
+        />
+        <p class="text-sm text-gray-400 mt-1">
+          Links this category to its translations. Use the <strong>same slug</strong>
+          on the matching category in each language (e.g. “dreams” on both Drome en
+          Gesigte and Dreams and Visions).
+        </p>
+      </div>
+
       <!-- Form Actions -->
       <div class="flex justify-end gap-3 pt-4">
         <button
@@ -90,6 +106,7 @@ const mode = computed(() => (props.categoryId ? 'edit' : 'create'))
 const formData = ref({
   catagory_name: props.category?.catagory_name || '',
   language: props.category?.language || 'af',
+  slug: props.category?.slug || '',
 })
 
 const isFormValid = computed(() => formData.value.catagory_name.trim().length > 0)
@@ -118,6 +135,7 @@ const handleSubmit = async () => {
     const categoryData = {
       catagory_name: formData.value.catagory_name.trim(),
       language: formData.value.language,
+      slug: formData.value.slug.trim() || null,
     }
 
     if (mode.value === 'create') {
