@@ -16,7 +16,7 @@
       <div class="flex w-full max-w-7xl mx-auto gap-0 md:gap-8 px-2 md:px-8">
         <router-link
           to="/"
-          class="flex-1 w-full max-w-3xl mx-auto px-2 md:px-8 block"
+          class="flex-1 w-full max-w-3xl mx-auto block"
         >
           <h1 class="text-3xl md:text-5xl font-bold mb-2 hover:text-blue-300 transition-colors">{{ languageStore.t('siteTitle') }}</h1>
           <h2 class="text-lg md:text-2xl font-light opacity-80">Jennifer Schoeman</h2>
