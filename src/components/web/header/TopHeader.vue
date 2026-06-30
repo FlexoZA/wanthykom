@@ -11,11 +11,17 @@
     <div v-else class="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-700"></div>
 
     <div class="absolute inset-0 flex items-center">
-      <div class="flex-1 w-full max-w-7xl mx-auto px-2 md:px-8">
-        <router-link to="/" class="block">
+      <!-- Mirrors DefaultLayout's content row (content column + sidebar spacer)
+           so the title lines up with the main content's left edge. -->
+      <div class="flex w-full max-w-7xl mx-auto gap-0 md:gap-8 px-2 md:px-8">
+        <router-link
+          to="/"
+          class="flex-1 w-full max-w-3xl mx-auto px-2 md:px-8 block"
+        >
           <h1 class="text-3xl md:text-5xl font-bold mb-2 hover:text-blue-300 transition-colors">{{ languageStore.t('siteTitle') }}</h1>
+          <h2 class="text-lg md:text-2xl font-light opacity-80">Jennifer Schoeman</h2>
         </router-link>
-        <h2 class="text-lg md:text-2xl font-light opacity-80">Jennifer Schoeman</h2>
+        <div class="hidden md:block w-56 min-w-[12rem]" aria-hidden="true"></div>
       </div>
     </div>
   </header>
