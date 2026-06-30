@@ -8,11 +8,11 @@
     ></div>
   </Teleport>
 
-  <!-- Selection popover: appears above highlighted text inside content -->
+  <!-- Desktop: selection popover anchored above the highlighted text -->
   <Teleport to="body">
     <Transition name="bm-pop">
       <div
-        v-if="popover.show"
+        v-if="popover.show && !isTouch"
         class="fixed z-[80] -translate-x-1/2 -translate-y-full"
         :style="{ top: popover.top + 'px', left: popover.left + 'px' }"
       >
@@ -26,6 +26,28 @@
             <path d="M6 2h12a1 1 0 011 1v18l-7-4-7 4V3a1 1 0 011-1z" />
           </svg>
           Bookmark
+        </button>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <!-- Mobile/touch: bookmark action pinned to the bottom, clear of the
+       browser's own text-selection toolbar that covers the in-place popover. -->
+  <Teleport to="body">
+    <Transition name="bm-pop">
+      <div
+        v-if="popover.show && isTouch"
+        class="fixed inset-x-0 bottom-0 z-[80] flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pointer-events-none"
+      >
+        <button
+          type="button"
+          class="pointer-events-auto flex items-center gap-2 px-6 py-3 rounded-full bg-amber-500 active:bg-amber-400 text-gray-900 text-base font-semibold shadow-2xl"
+          @click="saveSelection"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6 2h12a1 1 0 011 1v18l-7-4-7 4V3a1 1 0 011-1z" />
+          </svg>
+          Bookmark highlighted text
         </button>
       </div>
     </Transition>
@@ -91,6 +113,13 @@ const pending = ref(null)
 const hintVisible = ref(false)
 const savedFlash = ref(false)
 const fade = ref(false)
+// Touch devices show the browser's own selection toolbar over the anchored
+// popover, so on touch we present the bookmark action as a bottom button.
+const isTouch = ref(false)
+let pointerMql = null
+const onPointerChange = (e) => {
+  isTouch.value = e.matches
+}
 let savedFlashTimer = null
 
 let observer = null
@@ -356,6 +385,10 @@ watch(() => route.fullPath, scheduleRefresh)
 watch(() => bookmarkStore.bookmarks.length, scheduleRefresh)
 
 onMounted(() => {
+  pointerMql = window.matchMedia('(pointer: coarse)')
+  isTouch.value = pointerMql.matches
+  pointerMql.addEventListener?.('change', onPointerChange)
+
   observer = new MutationObserver(scheduleRefresh)
   const root = contentRoot()
   if (root) {
@@ -388,6 +421,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('touchstart', bumpIdle)
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('resize', hidePopover)
+  pointerMql?.removeEventListener?.('change', onPointerChange)
 })
 </script>
 
