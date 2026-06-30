@@ -12,6 +12,7 @@ export const LANGUAGE_LABELS = {
 
 export const messages = {
   af: {
+    siteTitle: 'Want hy kom',
     foreword: 'Voorwoord',
     menu: 'Menu',
     language: 'Taal',
@@ -26,6 +27,7 @@ export const messages = {
     allRightsReserved: 'Alle regte voorbehou.',
   },
   en: {
+    siteTitle: 'For He is Coming',
     foreword: 'Foreword',
     menu: 'Menu',
     language: 'Language',
