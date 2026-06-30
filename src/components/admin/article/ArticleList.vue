@@ -1,7 +1,22 @@
 <template>
   <div class="space-y-4">
-    <!-- Create New Article Button -->
-    <div class="flex justify-end">
+    <!-- Toolbar: Language Filter + Create New Article Button -->
+    <div class="flex justify-between items-center gap-4">
+      <div class="flex items-center gap-2">
+        <label for="language-filter" class="text-sm text-gray-400">Language</label>
+        <select
+          id="language-filter"
+          :value="languageFilter"
+          @change="onLanguageFilterChange"
+          class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-sm focus:outline-none focus:border-blue-500"
+        >
+          <option value="all">All languages</option>
+          <option v-for="lang in SUPPORTED_LANGUAGES" :key="lang" :value="lang">
+            {{ LANGUAGE_LABELS[lang] }}
+          </option>
+        </select>
+      </div>
+
       <button
         @click="$router.push('/admin/articles/create')"
         class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors flex items-center gap-2"
@@ -170,6 +185,45 @@
         </div>
       </div>
     </div>
+
+    <!-- Pagination -->
+    <div
+      v-if="!isLoading && !error && totalCount > 0"
+      class="flex items-center justify-between pt-2"
+    >
+      <p class="text-sm text-gray-400">
+        Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalCount }}
+      </p>
+      <div class="flex items-center gap-1">
+        <button
+          @click="goToPage(currentPage - 1)"
+          :disabled="currentPage <= 1"
+          class="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Prev
+        </button>
+        <button
+          v-for="page in pageNumbers"
+          :key="page"
+          @click="goToPage(page)"
+          class="px-3 py-1 text-sm rounded-md transition-colors"
+          :class="
+            page === currentPage
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-700 hover:bg-gray-600 text-white'
+          "
+        >
+          {{ page }}
+        </button>
+        <button
+          @click="goToPage(currentPage + 1)"
+          :disabled="currentPage >= totalPages"
+          class="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Next
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -180,6 +234,7 @@ import { useSupabaseAdminArticleStore } from '@/stores/admin/AdminArticleStore'
 import LoadingAnimation from '@/components/admin/helpers/LoadingAnimation.vue'
 import ConfirmationDialog from '@/components/admin/dialogs/ConfirmationDialog.vue'
 import { htmlPreview } from '@/utils/html'
+import { SUPPORTED_LANGUAGES, LANGUAGE_LABELS } from '@/i18n/messages'
 
 const router = useRouter()
 const emit = defineEmits(['delete-article'])
@@ -193,6 +248,42 @@ const articleStore = useSupabaseAdminArticleStore()
 const articles = computed(() => articleStore.getArticles)
 const isLoading = computed(() => articleStore.getIsLoading)
 const error = computed(() => articleStore.getError)
+
+// Pagination + filter (state lives in the store so it survives edit/return)
+const totalCount = computed(() => articleStore.getTotalCount)
+const totalPages = computed(() => articleStore.getTotalPages)
+const currentPage = computed(() => articleStore.getCurrentPage)
+const pageSize = computed(() => articleStore.getPageSize)
+const languageFilter = computed(() => articleStore.getLanguageFilter)
+
+const rangeStart = computed(() =>
+  totalCount.value === 0 ? 0 : (currentPage.value - 1) * pageSize.value + 1,
+)
+const rangeEnd = computed(() =>
+  Math.min(currentPage.value * pageSize.value, totalCount.value),
+)
+
+// A compact run of page numbers centred on the current page.
+const pageNumbers = computed(() => {
+  const total = totalPages.value
+  const current = currentPage.value
+  const windowSize = 5
+  let start = Math.max(1, current - Math.floor(windowSize / 2))
+  let end = Math.min(total, start + windowSize - 1)
+  start = Math.max(1, end - windowSize + 1)
+  const pages = []
+  for (let p = start; p <= end; p++) pages.push(p)
+  return pages
+})
+
+const goToPage = (page) => {
+  if (page < 1 || page > totalPages.value || page === currentPage.value) return
+  articleStore.setPage(page)
+}
+
+const onLanguageFilterChange = (event) => {
+  articleStore.setLanguageFilter(event.target.value)
+}
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', {
