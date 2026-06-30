@@ -153,6 +153,33 @@ const router = createRouter({
       },
     },
     {
+      path: '/admin/categories',
+      name: 'admin-categories',
+      component: () => import('@/views/admin/category/CategoryListView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/categories/create',
+      name: 'admin-categories-create',
+      component: () => import('@/views/admin/category/CategoryCreateView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/admin/categories/:id/edit',
+      name: 'admin-categories-edit',
+      component: () => import('@/views/admin/category/CategoryEditView.vue'),
+      meta: {
+        layout: 'admin',
+        requiresAuth: true,
+      },
+    },
+    {
       path: '/admin/media-manager',
       name: 'admin-media-manager',
       component: () => import('@/views/admin/media/MediaManagerView.vue'),

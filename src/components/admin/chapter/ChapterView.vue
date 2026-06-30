@@ -67,7 +67,7 @@
         <img
           :src="chapter.book_chapter_image_url"
           :alt="chapter.chapter_name"
-          class="w-full h-64 object-cover rounded-lg"
+          class="w-full h-auto object-contain rounded-lg"
         />
       </div>
 
