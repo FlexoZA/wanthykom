@@ -6,13 +6,28 @@ export const useSupabaseAdminArticleStore = defineStore('supabaseAdminArticle', 
   const articles = ref([])
   const isLoading = ref(false)
   const error = ref(null)
+
+  // Pagination + filter state. Kept in the store so it survives SPA navigation
+  // (e.g. editing an article and returning lands on the same page/filter).
+  const totalCount = ref(0)
+  const currentPage = ref(1)
+  const pageSize = ref(10)
+  const languageFilter = ref('all') // 'all' | 'af' | 'en'
+
   const fetchArticles = async () => {
     try {
       isLoading.value = true
       error.value = null
-      console.log('DEBUG::supabaseAdminArticleStore', 'Fetching articles')
+      console.log('DEBUG::supabaseAdminArticleStore', 'Fetching articles', {
+        page: currentPage.value,
+        pageSize: pageSize.value,
+        language: languageFilter.value,
+      })
 
-      const { data, error: fetchError } = await supabase
+      const from = (currentPage.value - 1) * pageSize.value
+      const to = from + pageSize.value - 1
+
+      let query = supabase
         .from('article')
         .select(
           `
@@ -31,21 +46,54 @@ export const useSupabaseAdminArticleStore = defineStore('supabaseAdminArticle', 
             catagory_name
           )
         `,
+          { count: 'exact' },
         )
         .order('created_at', { ascending: false })
+        .range(from, to)
+
+      if (languageFilter.value !== 'all') {
+        query = query.eq('language', languageFilter.value)
+      }
+
+      const { data, error: fetchError, count } = await query
 
       if (fetchError) {
         throw fetchError
       }
 
+      totalCount.value = count || 0
+
+      // If the current page is now empty (e.g. after deleting the last item on
+      // the last page), step back a page and refetch.
+      if ((data || []).length === 0 && currentPage.value > 1) {
+        currentPage.value -= 1
+        return fetchArticles()
+      }
+
       articles.value = data || []
-      console.log('DEBUG::supabaseAdminArticleStore', 'Articles fetched successfully', data)
+      console.log('DEBUG::supabaseAdminArticleStore', 'Articles fetched successfully', {
+        count: totalCount.value,
+        returned: articles.value.length,
+      })
     } catch (err) {
       console.error('DEBUG::supabaseAdminArticleStore', 'Error fetching articles:', err)
       error.value = err.message
     } finally {
       isLoading.value = false
     }
+  }
+
+  const setPage = async (page) => {
+    console.log('DEBUG::supabaseAdminArticleStore', 'Set page:', page)
+    currentPage.value = page
+    await fetchArticles()
+  }
+
+  const setLanguageFilter = async (language) => {
+    console.log('DEBUG::supabaseAdminArticleStore', 'Set language filter:', language)
+    languageFilter.value = language
+    currentPage.value = 1 // reset to first page when the filter changes
+    await fetchArticles()
   }
 
   const createArticle = async (articleData) => {
@@ -198,6 +246,13 @@ export const useSupabaseAdminArticleStore = defineStore('supabaseAdminArticle', 
   const getArticles = computed(() => articles.value)
   const getIsLoading = computed(() => isLoading.value)
   const getError = computed(() => error.value)
+  const getTotalCount = computed(() => totalCount.value)
+  const getCurrentPage = computed(() => currentPage.value)
+  const getPageSize = computed(() => pageSize.value)
+  const getLanguageFilter = computed(() => languageFilter.value)
+  const getTotalPages = computed(() =>
+    Math.max(1, Math.ceil(totalCount.value / pageSize.value)),
+  )
 
   return {
     fetchArticles,
@@ -205,8 +260,15 @@ export const useSupabaseAdminArticleStore = defineStore('supabaseAdminArticle', 
     fetchArticle,
     updateArticle,
     deleteArticle,
+    setPage,
+    setLanguageFilter,
     getArticles,
     getIsLoading,
     getError,
+    getTotalCount,
+    getCurrentPage,
+    getPageSize,
+    getLanguageFilter,
+    getTotalPages,
   }
 })
